@@ -1,6 +1,8 @@
 import type { ValidationError } from "../core/error";
+import { makeProgramCounter, type ProgramCounter } from "../core/program-counter";
 import { err, ok, type Result } from "../core/result";
-import type { ProgramCounter } from "../core/program-counter";
+
+const validatedProgramBrand = Symbol("validatedProgram");
 
 export type ValidatedInstruction =
   | { readonly tag: "moveRight" }
@@ -12,17 +14,24 @@ export type ValidatedInstruction =
   | { readonly tag: "jumpIfZero"; readonly target: ProgramCounter }
   | { readonly tag: "jumpIfNonZero"; readonly target: ProgramCounter };
 
-export interface ValidatedProgram {
+export type ValidatedProgram = {
   readonly length: number;
   readonly instructions: readonly ValidatedInstruction[];
-}
+  readonly [validatedProgramBrand]: "ValidatedProgram";
+};
 
 export const makeValidatedProgram = (
   instructions: readonly ValidatedInstruction[]
-): ValidatedProgram => ({
-  length: instructions.length,
-  instructions
-});
+): ValidatedProgram => {
+  const program = {
+    length: instructions.length,
+    instructions
+  };
+
+  return Object.defineProperty(program, validatedProgramBrand, {
+    value: "ValidatedProgram"
+  }) as ValidatedProgram;
+};
 
 export const getValidatedInstruction = (
   program: ValidatedProgram,
@@ -33,11 +42,13 @@ export const makeValidatedTarget = (
   value: number,
   length: number,
   sourceIndex: number
-): Result<ProgramCounter, ValidationError> =>
-  value >= 0 && value <= length
-    ? ok<ProgramCounter, ValidationError>(value as ProgramCounter)
+): Result<ProgramCounter, ValidationError> => {
+  const target = makeProgramCounter(value, length);
+  return target !== null
+    ? ok<ProgramCounter, ValidationError>(target)
     : err<ProgramCounter, ValidationError>({
         tag: "invalidJumpTarget",
         index: sourceIndex,
         target: value
       });
+};

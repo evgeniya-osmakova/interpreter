@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/brainfuck/program/parse";
 import { validate } from "../src/brainfuck/program/validate";
+import { makeValidatedTarget } from "../src/brainfuck/program/validated-program";
 
 describe("validation", () => {
   it("ignores non-Brainfuck characters during parsing", () => {
@@ -78,5 +79,16 @@ describe("validation", () => {
     }
 
     expect(validated.value.length).toBe(validated.value.instructions.length);
+  });
+
+  it("rejects out-of-range validated jump targets", () => {
+    expect(makeValidatedTarget(3, 2, 0)).toEqual({
+      tag: "err",
+      error: {
+        tag: "invalidJumpTarget",
+        index: 0,
+        target: 3
+      }
+    });
   });
 });

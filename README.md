@@ -103,6 +103,7 @@ Why this is the best tradeoff:
 - In Lean, program length is part of the type of both instructions and execution state, which makes step semantics and later proofs more direct.
 - In TypeScript, loop instruction targets now use the same branded `ProgramCounter` domain type as `ExecState.pc`, matching Lean more closely than a separate jump-target brand.
 - In TypeScript, `makeValidatedProgram` derives `length` from the validated instruction array, so the normal construction path cannot drift into a mismatched `length`/`instructions` pair.
+- In TypeScript, `ValidatedProgram` is now an opaque branded value created by `makeValidatedProgram`, which makes malformed post-validation program objects harder to construct on the normal path.
 - In TypeScript, `ExecState.pc` is now a branded `ProgramCounter`, so control state is no longer a raw `number` on the normal path.
 - In both phases, `runFuel` is now just the state projection of `runSlice`, so bounded evaluation has one canonical implementation path instead of two parallel ones.
 - This is better than evaluating raw `[` and `]` tokens directly because the PDF requires bracket matching before execution.
