@@ -4,6 +4,8 @@ namespace Brainfuck.Proofs
 
 open Brainfuck.Core
 
+def maxCell : Cell := ⟨255, by decide⟩
+
 theorem increment_preserves_bounds (cell : Cell) :
     (Cell.increment cell).val < 256 :=
   (Cell.increment cell).isLt
@@ -11,5 +13,13 @@ theorem increment_preserves_bounds (cell : Cell) :
 theorem decrement_preserves_bounds (cell : Cell) :
     (Cell.decrement cell).val < 256 :=
   (Cell.decrement cell).isLt
+
+theorem increment_wraps_from_max :
+    Cell.increment maxCell = Cell.zero := by
+  native_decide
+
+theorem decrement_wraps_from_zero :
+    Cell.decrement Cell.zero = maxCell := by
+  native_decide
 
 end Brainfuck.Proofs

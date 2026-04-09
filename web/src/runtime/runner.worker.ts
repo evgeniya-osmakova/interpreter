@@ -7,42 +7,55 @@ import { runSlice } from "../brainfuck/semantics/run-slice";
 import type { WorkerEvent, WorkerRequest } from "./worker-protocol";
 
 let stopped = false;
+let activeRunId = 0;
 
 const emit = (event: WorkerEvent): void => {
   self.postMessage(event);
 };
 
-self.onmessage = (message: MessageEvent<WorkerRequest>): void => {
-  if (message.data.tag === "stop") {
-    stopped = true;
-    emit({ tag: "stopped" });
-    return;
-  }
+const pause = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
+const isCurrentRun = (runId: number): boolean => !stopped && activeRunId === runId;
+
+const runProgram = async (
+  runId: number,
+  source: string,
+  input: WorkerRequest & { tag: "run" }
+): Promise<void> => {
   stopped = false;
 
-  const parsed = parse(message.data.source);
+  const parsed = parse(source);
   if (parsed.tag === "err") {
-    emit({ tag: "validationError", error: parsed.error });
+    if (activeRunId === runId) {
+      emit({ tag: "validationError", error: parsed.error });
+    }
     return;
   }
 
   const validated = validate(parsed.value);
   if (validated.tag === "err") {
-    emit({ tag: "validationError", error: validated.error });
+    if (activeRunId === runId) {
+      emit({ tag: "validationError", error: validated.error });
+    }
     return;
   }
 
-  let current = initialExecState(message.data.input);
+  let current = initialExecState(input.input);
 
-  while (!stopped) {
-    const slice = runSlice(validated.value, current, message.data.budget);
+  while (isCurrentRun(runId)) {
+    const slice = runSlice(validated.value, current, input.budget);
     if (slice.tag === "err") {
-      emit({ tag: "runtimeError", error: slice.error });
+      if (activeRunId === runId) {
+        emit({ tag: "runtimeError", error: slice.error });
+      }
       return;
     }
 
     current = slice.value.state;
+    if (!isCurrentRun(runId)) {
+      return;
+    }
+
     emit({
       tag: "progress",
       state: current,
@@ -53,5 +66,20 @@ self.onmessage = (message: MessageEvent<WorkerRequest>): void => {
     if (slice.value.done) {
       return;
     }
+
+    await pause();
   }
+};
+
+self.onmessage = (message: MessageEvent<WorkerRequest>): void => {
+  if (message.data.tag === "stop") {
+    stopped = true;
+    activeRunId += 1;
+    emit({ tag: "stopped" });
+    return;
+  }
+
+  activeRunId += 1;
+  const runId = activeRunId;
+  void runProgram(runId, message.data.source, message.data);
 };

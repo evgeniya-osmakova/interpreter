@@ -98,6 +98,8 @@ This is a better starting tradeoff than exposing raw `number[]`:
 │       │   └── ValidatedProgram.lean
 │       ├── Proofs/
 │       │   ├── Cell.lean
+│       │   ├── Eval.lean
+│       │   ├── Pointer.lean
 │       │   └── Step.lean
 │       └── Semantics/
 │           ├── Eval.lean
@@ -124,6 +126,7 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │   │   ├── validate.ts
     │   │   │   └── validated-program.ts
     │   │   └── semantics/
+    │   │       ├── eval.ts
     │   │       ├── run-slice.ts
     │   │       └── step.ts
     │   ├── runtime/
