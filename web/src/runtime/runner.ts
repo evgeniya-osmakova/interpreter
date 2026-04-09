@@ -2,6 +2,7 @@ import { initialExecState } from "../brainfuck/core/state";
 import { parse } from "../brainfuck/program/parse";
 import { validate } from "../brainfuck/program/validate";
 import { runSlice } from "../brainfuck/semantics/run-slice";
+import { normalizeExecutionBudget } from "./budget";
 import { createMachineSnapshot } from "./snapshot";
 import type { WorkerEvent, WorkerRequest } from "./worker-protocol";
 
@@ -11,14 +12,6 @@ export interface RunnerDeps {
 }
 
 const defaultPause = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
-
-const normalizeBudget = (budget: number): number => {
-  if (!Number.isFinite(budget)) {
-    return 1;
-  }
-
-  return Math.max(1, Math.trunc(budget));
-};
 
 export const createRunner = (deps: RunnerDeps) => {
   let stopped = false;
@@ -33,7 +26,7 @@ export const createRunner = (deps: RunnerDeps) => {
     request: Extract<WorkerRequest, { tag: "run" }>
   ): Promise<void> => {
     stopped = false;
-    const budget = normalizeBudget(request.budget);
+    const budget = normalizeExecutionBudget(request.budget);
 
     const parsed = parse(request.source);
     if (parsed.tag === "err") {

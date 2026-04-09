@@ -1,5 +1,6 @@
 import type { Cell } from "../brainfuck/core/cell";
 import { makeCell } from "../brainfuck/core/cell";
+import { parseExecutionBudgetInput } from "../runtime/budget";
 import { createWorkerRuntimeClient, type RuntimeClient } from "../runtime/client";
 import { createInitialMachineSnapshot } from "../runtime/snapshot";
 import type { WorkerEvent, WorkerRequest } from "../runtime/worker-protocol";
@@ -14,11 +15,6 @@ const bytesToText = (bytes: readonly number[]): string =>
 
 const textToCells = (text: string): readonly Cell[] =>
   Array.from(text, (char) => makeCell(char.charCodeAt(0)));
-
-const readBudget = (value: string): number => {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1000;
-};
 
 export interface AppHandle {
   dispose: () => void;
@@ -93,7 +89,7 @@ export const mountApp = (
       tag: "run",
       source: controls.source.value,
       input: textToCells(controls.input.value),
-      budget: readBudget(controls.budget.value)
+      budget: parseExecutionBudgetInput(controls.budget.value)
     };
     status.setStatus("Starting", "Worker request dispatched");
     runtimeClient.send(request);

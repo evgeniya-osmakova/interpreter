@@ -135,6 +135,38 @@ describe("browser UI shell", () => {
     expect(root.querySelector(".status__label")?.textContent).toBe("Starting");
   });
 
+  it("normalizes negative budget input through the shared runtime budget path", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const client = new FakeRuntimeClient();
+
+    appHandle = mountApp(root, client);
+
+    const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
+    const budget = root.querySelector<HTMLInputElement>('input[name="budget"]');
+    const runButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Run"
+    );
+
+    expect(source).not.toBeNull();
+    expect(budget).not.toBeNull();
+    expect(runButton).not.toBeUndefined();
+    if (source === null || budget === null || runButton === undefined) {
+      return;
+    }
+
+    source.value = "+";
+    budget.value = "-5";
+    runButton.click();
+
+    expect(client.requests.at(-1)).toEqual({
+      tag: "run",
+      source: "+",
+      input: [],
+      budget: 1
+    });
+  });
+
   it("renders progress events into output and inspector state", () => {
     const root = document.createElement("div");
     document.body.append(root);
