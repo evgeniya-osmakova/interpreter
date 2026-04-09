@@ -1,0 +1,59 @@
+:root {
+  color: #102038;
+  background:
+    radial-gradient(circle at top left, #f4efe6, transparent 35%),
+    linear-gradient(180deg, #f7f4ee 0%, #e7eef5 100%);
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+}
+
+body {
+  margin: 0;
+}
+
+#app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 20px 64px;
+}
+
+textarea,
+input,
+button {
+  font: inherit;
+}
+
+textarea,
+input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #b8c4cf;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+button {
+  padding: 10px 16px;
+  border: 0;
+  cursor: pointer;
+  background: #20334a;
+  color: #f7f4ee;
+}
+
+.status {
+  min-height: 24px;
+  margin-top: 20px;
+}
+
+.output {
+  min-height: 160px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid #b8c4cf;
+  overflow: auto;
+}
