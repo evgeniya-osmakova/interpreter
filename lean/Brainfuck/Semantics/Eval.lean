@@ -48,15 +48,7 @@ def runSlice (program : ValidatedProgram) (state : ExecState program.length) (bu
 
 def runFuel (program : ValidatedProgram) (fuel : Nat) (state : ExecState program.length) :
     Result (ExecState program.length) RuntimeError :=
-  match fuel with
-  | 0 => .ok state
-  | remaining + 1 =>
-      if isTerminated program state then
-        .ok state
-      else
-        match step program state with
-        | .ok nextState => runFuel program remaining nextState
-        | .err error => .err error
+  Result.map SliceProgress.state (runSlice program state fuel)
 
 def runWithInput (program : ValidatedProgram) (fuel : Nat) (input : List Cell := []) :
     Result (ExecState program.length) RuntimeError :=

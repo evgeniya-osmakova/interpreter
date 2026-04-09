@@ -110,30 +110,7 @@ theorem runSlice_ok_state_matches_runFuel (program : ValidatedProgram)
     (progress : SliceProgress program.length)
     (h : runSlice program state budget = .ok progress) :
     runFuel program budget state = .ok progress.state := by
-  induction budget generalizing state progress with
-  | zero =>
-      simp [runSlice] at h
-      cases h
-      simp [runFuel]
-  | succ remaining ih =>
-      unfold runSlice at h
-      by_cases hterm : isTerminated program state
-      · simp [hterm] at h
-        cases h
-        simp [runFuel, hterm]
-      · simp [hterm] at h
-        cases hstep : step program state with
-        | err error =>
-            simp [hstep] at h
-        | ok nextState =>
-            cases hslice : runSlice program nextState remaining with
-            | err error =>
-                simp [hstep, hslice] at h
-            | ok nextProgress =>
-                simp [hstep, hslice] at h
-                cases h
-                have hrun := ih nextState nextProgress hslice
-                simpa [runFuel, hterm, hstep] using hrun
+  simp [runFuel, Result.map, h]
 
 theorem runSlice_ok_not_done_exhausts_budget (program : ValidatedProgram)
     (state : ExecState program.length)
@@ -171,18 +148,16 @@ theorem runSlice_ok_not_done_exhausts_budget (program : ValidatedProgram)
 
 theorem runFuel_zero_returns_initial (program : ValidatedProgram)
     (state : ExecState program.length) :
-    runFuel program 0 state = .ok state := rfl
+    runFuel program 0 state = .ok state := by
+  simp [runFuel, runSlice, Result.map]
 
 theorem runFuel_terminated_state_returns_state (program : ValidatedProgram)
     (state : ExecState program.length)
     (fuel : Nat)
     (h : state.pc.val = program.length) :
     runFuel program fuel state = .ok state := by
-  induction fuel with
-  | zero =>
-      rfl
-  | succ remaining ih =>
-      simp [runFuel, isTerminated, h]
+  have hslice := runSlice_terminated_state_returns_done program state fuel h
+  simp [runFuel, Result.map, hslice]
 
 theorem runFuel_succ_step_error (program : ValidatedProgram)
     (state : ExecState program.length)
@@ -191,7 +166,7 @@ theorem runFuel_succ_step_error (program : ValidatedProgram)
     (error : RuntimeError)
     (hstep : step program state = .err error) :
     runFuel program (remaining + 1) state = .err error := by
-  simp [runFuel, hterm, hstep]
+  simp [runFuel, runSlice, Result.map, hterm, hstep]
 
 theorem runFuel_succ_step_ok (program : ValidatedProgram)
     (state : ExecState program.length)
@@ -200,12 +175,16 @@ theorem runFuel_succ_step_ok (program : ValidatedProgram)
     (nextState : ExecState program.length)
     (hstep : step program state = .ok nextState) :
     runFuel program (remaining + 1) state = runFuel program remaining nextState := by
-  simp [runFuel, hterm, hstep]
+  cases hslice : runSlice program nextState remaining with
+  | err error =>
+      simp [runFuel, runSlice, Result.map, hterm, hstep, hslice]
+  | ok progress =>
+      simp [runFuel, runSlice, Result.map, hterm, hstep, hslice]
 
 theorem runWithInput_zero_returns_initial_state (program : ValidatedProgram)
     (input : List Cell) :
     runWithInput program 0 input = .ok (ExecState.initial program.length input) := by
-  simp [runWithInput, runFuel]
+  simp [runWithInput, runFuel, runSlice, Result.map]
 
 theorem runFuel_empty_program_returns_initial (state : ExecState ValidatedProgram.empty.length)
     (fuel : Nat) :
