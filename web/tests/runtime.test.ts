@@ -81,6 +81,13 @@ describe("runtime runner", () => {
     expect(events[0].done).toBe(true);
     expect(events[0].stepsExecuted).toBe(1);
     expect(events[0].state.pc).toBe(1);
+    expect(events[0].snapshot.pc).toBe(1);
+    expect(events[0].snapshot.pointer).toBe(0);
+    expect(events[0].snapshot.currentCell).toBe(1);
+    expect(events[0].snapshot.outputLength).toBe(0);
+    expect(events[0].snapshot.tapeWindow.some((cell) => cell.isPointer && cell.value === 1)).toBe(
+      true
+    );
   });
 
   it("stops a long-running run between slices", async () => {

@@ -38,6 +38,19 @@ input {
   background: rgba(255, 255, 255, 0.8);
 }
 
+.examples {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.examples__button {
+  background: rgba(255, 255, 255, 0.8);
+  color: #20334a;
+  border: 1px solid #b8c4cf;
+}
+
 .actions {
   display: flex;
   gap: 12px;
@@ -106,6 +119,14 @@ button {
   font-size: 1.35rem;
 }
 
+.panel-title {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #40566f;
+}
+
 .tape-window {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
@@ -136,9 +157,34 @@ button {
 }
 
 .output {
-  min-height: 160px;
+  display: grid;
+  gap: 10px;
   padding: 16px;
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid #b8c4cf;
   overflow: auto;
+}
+
+.output__label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #40566f;
+}
+
+.output__text {
+  min-height: 120px;
+  margin: 0;
+  padding: 12px;
+  background: rgba(247, 244, 238, 0.8);
+  border: 1px solid #d5dde5;
+  overflow: auto;
+}
+
+.output__bytes {
+  display: block;
+  padding: 12px;
+  background: rgba(247, 244, 238, 0.8);
+  border: 1px solid #d5dde5;
+  overflow: auto;
+  white-space: pre-wrap;
 }

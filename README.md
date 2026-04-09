@@ -1,16 +1,69 @@
 # Brainfuck Two-Phase Repository
 
-This repository is a single Brainfuck system with two tightly related phases:
+This repository is one Brainfuck system with two tightly related phases:
 
 - `lean/` contains the Phase I Lean 4 formal model.
-- `web/` contains the Phase II TypeScript interpreter, worker runtime, and minimal browser UI shell.
+- `web/` contains the Phase II TypeScript interpreter, worker runtime, and browser UI shell.
 
-The architecture is intentionally mirrored across both phases:
+The phases are mirrored intentionally rather than implemented as unrelated projects:
 
 - `core` defines domain types and explicit `Result/Error` modeling.
-- `program` separates raw source parsing from validated program construction.
-- `semantics` defines `step` and bounded evaluation helpers.
-- `runtime` and `ui` exist only in `web/`, keeping the browser layer thin.
+- `program` separates raw parsing from validated program construction.
+- `semantics` defines `step`, bounded evaluation, and execution contracts.
+- `runtime` and `ui` exist only in `web/`, keeping the browser layer thin over the pure engine.
+
+## Quick Start
+
+### Lean
+
+```bash
+cd lean
+lake build
+```
+
+### Web
+
+```bash
+cd web
+npm install
+npm test
+npm run build
+npm run dev
+```
+
+## Current Status
+
+- `lean/` builds cleanly with `lake build`
+- `web/` passes `npm test`
+- `web/` builds with `npm run build`
+- the TS engine correctly runs the canonical Brainfuck `Hello World`
+- browser execution is non-blocking via `Web Worker` plus chunked `runSlice`
+
+## Cross-Phase Mapping
+
+| Concept | Lean | TypeScript |
+| --- | --- | --- |
+| Result | `Brainfuck.Core.Result` | `brainfuck/core/result.ts` |
+| Tape and cells | `Cell`, `Tape`, `Pointer` | `cell.ts`, `tape.ts`, `pointer.ts` |
+| Raw program | `RawProgram` | `raw-program.ts` |
+| Validated program | `ValidatedProgram` | `validated-program.ts` |
+| Validation | `Program.Validate` | `program/validate.ts` |
+| Single-step semantics | `Semantics.step` | `semantics/step.ts` |
+| Bounded evaluation | `Semantics.runFuel` | `semantics/eval.ts`, `run-slice.ts` |
+| Async browser driver | n/a | `runtime/runner.ts`, `runner.worker.ts` |
+
+## Browser Execution Model
+
+The browser shell never executes the interpreter on the main thread.
+
+- The pure interpreter lives under `web/src/brainfuck/`.
+- The async driver lives under `web/src/runtime/`.
+- `runner.worker.ts` hosts a `Web Worker`.
+- The worker runs the pure engine in bounded slices via `runSlice`.
+- After each slice it emits a serializable progress snapshot.
+- The UI only renders those snapshots and sends `run` / `stop` requests.
+
+This is better than timers on the main thread because non-terminating or long-running programs cannot freeze the UI thread.
 
 ## PDF Requirements vs Candidate Design Decisions
 
@@ -54,7 +107,7 @@ Why this is the best tradeoff:
 
 ## TypeScript Tape Purity over `Uint8Array`
 
-`web/src/brainfuck/core/tape.ts` will wrap `Uint8Array` behind a small opaque API.
+`web/src/brainfuck/core/tape.ts` wraps `Uint8Array` behind a small opaque API.
 
 Purity is preserved as follows:
 
@@ -71,7 +124,7 @@ This is a better starting tradeoff than exposing raw `number[]`:
 - it keeps fixed-width cell storage obvious
 - it leaves room for later internal optimization without changing the public engine API
 
-## Repository Scaffold
+## Repository Layout
 
 ```text
 .
@@ -133,17 +186,23 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │       ├── run-slice.ts
     │   │       └── step.ts
     │   ├── runtime/
+    │   │   ├── runner.ts
     │   │   ├── runner.worker.ts
+    │   │   ├── snapshot.ts
     │   │   └── worker-protocol.ts
     │   ├── styles/
     │   │   └── app.css
     │   └── ui/
     │       ├── app.ts
     │       ├── controls.ts
+    │       ├── examples.ts
+    │       ├── inspector-view.ts
     │       ├── output-view.ts
     │       └── status-view.ts
     └── tests/
+        ├── eval.test.ts
         ├── hello-world.test.ts
+        ├── runtime.test.ts
         ├── step.test.ts
         └── validation.test.ts
 ```
