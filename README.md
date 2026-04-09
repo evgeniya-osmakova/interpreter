@@ -100,6 +100,7 @@ This is a better starting tradeoff than exposing raw `number[]`:
 │       ├── Proofs/
 │       │   ├── Cell.lean
 │       │   ├── Eval.lean
+│       │   ├── Parse.lean
 │       │   ├── Pointer.lean
 │       │   ├── Step.lean
 │       │   └── Validate.lean

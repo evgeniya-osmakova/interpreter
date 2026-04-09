@@ -11,6 +11,7 @@ import Brainfuck.Program.Validate
 import Brainfuck.Program.ValidatedProgram
 import Brainfuck.Proofs.Cell
 import Brainfuck.Proofs.Eval
+import Brainfuck.Proofs.Parse
 import Brainfuck.Proofs.Pointer
 import Brainfuck.Proofs.Step
 import Brainfuck.Proofs.Validate

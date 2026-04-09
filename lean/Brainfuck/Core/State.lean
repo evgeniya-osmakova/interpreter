@@ -9,7 +9,7 @@ structure MachineState where
   pointer : Pointer
   input : List Cell
   output : List Cell
-  deriving Repr
+  deriving DecidableEq, Repr
 
 namespace MachineState
 
@@ -29,7 +29,7 @@ end MachineState
 structure ExecState (programLength : Nat) where
   machine : MachineState
   pc : Fin (programLength + 1)
-  deriving Repr
+  deriving DecidableEq, Repr
 
 namespace ExecState
 

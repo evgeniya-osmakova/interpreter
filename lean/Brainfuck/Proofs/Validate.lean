@@ -10,6 +10,16 @@ def emptyRawProgram : RawProgram := { instructions := #[] }
 def simpleLoopRawProgram : RawProgram :=
   { instructions := #[InstructionToken.loopStart, InstructionToken.loopEnd] }
 
+def simpleLoopProgram : ValidatedProgram :=
+  {
+    length := 2
+    instructions :=
+      #v[
+        ValidatedInstruction.jumpIfZero ⟨2, by decide⟩,
+        ValidatedInstruction.jumpIfNonZero ⟨0, by decide⟩
+      ]
+  }
+
 theorem validate_empty_program :
     Validate.validate emptyRawProgram = .ok ValidatedProgram.empty := by
   native_decide
@@ -26,15 +36,18 @@ theorem validate_unmatched_loop_start :
 
 theorem validate_simple_loop_targets :
     Validate.validate simpleLoopRawProgram =
-      .ok
-        {
-          length := 2
-          instructions :=
-            #v[
-              ValidatedInstruction.jumpIfZero ⟨2, by decide⟩,
-              ValidatedInstruction.jumpIfNonZero ⟨0, by decide⟩
-            ]
-        } := by
+      .ok simpleLoopProgram := by
   native_decide
+
+theorem validate_result_preserves_raw_length (program : RawProgram) :
+    match Validate.validate program with
+    | .ok validated => validated.length = program.instructions.size
+    | .err _ => True := by
+  simpa using Validate.validate_result_preserves_raw_length program
+
+theorem validate_ok_preserves_raw_length (program : RawProgram) (validated : ValidatedProgram)
+    (h : Validate.validate program = .ok validated) :
+    validated.length = program.instructions.size := by
+  simpa using Validate.validate_ok_preserves_raw_length program validated h
 
 end Brainfuck.Proofs

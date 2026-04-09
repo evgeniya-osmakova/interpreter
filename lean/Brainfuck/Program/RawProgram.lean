@@ -6,7 +6,7 @@ open Brainfuck.Core
 
 structure RawProgram where
   instructions : Array InstructionToken
-  deriving Repr
+  deriving DecidableEq, Repr
 
 namespace RawProgram
 

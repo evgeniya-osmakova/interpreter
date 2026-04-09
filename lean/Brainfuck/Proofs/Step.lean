@@ -1,4 +1,4 @@
-import Brainfuck.Program.ValidatedProgram
+import Brainfuck.Proofs.Validate
 import Brainfuck.Semantics.Step
 
 namespace Brainfuck.Proofs
@@ -6,6 +6,26 @@ namespace Brainfuck.Proofs
 open Brainfuck.Program
 open Brainfuck.Semantics
 open Brainfuck.Core
+
+def cellOne : Cell := ⟨1, by decide⟩
+
+def simpleLoopZeroState : ExecState simpleLoopProgram.length :=
+  ExecState.initial simpleLoopProgram.length
+
+def simpleLoopNonZeroMachine : MachineState :=
+  { MachineState.initial with tape := Tape.write MachineState.initial.tape Pointer.zero cellOne }
+
+def simpleLoopNonZeroStartState : ExecState simpleLoopProgram.length :=
+  {
+    machine := simpleLoopNonZeroMachine
+    pc := ⟨0, by decide⟩
+  }
+
+def simpleLoopNonZeroEndState : ExecState simpleLoopProgram.length :=
+  {
+    machine := simpleLoopNonZeroMachine
+    pc := ⟨1, by decide⟩
+  }
 
 theorem nextPc_in_bounds {programLength : Nat} (pc : Fin (programLength + 1)) :
     (nextPc pc).val < programLength + 1 :=
@@ -20,5 +40,60 @@ theorem step_on_terminated_state_is_ok (program : ValidatedProgram)
     step program state = .ok state := by
   unfold step
   simp [h]
+
+theorem step_jumpIfZero_zero_uses_target (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (target : ProgramCounter program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .jumpIfZero target)
+    (hcell : (Tape.read state.machine.tape state.machine.pointer).val = 0) :
+    step program state = .ok { state with pc := target } := by
+  unfold step
+  simp [hpc, hinstr, hcell]
+
+theorem step_jumpIfZero_nonzero_advances (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (target : ProgramCounter program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .jumpIfZero target)
+    (hcell : (Tape.read state.machine.tape state.machine.pointer).val ≠ 0) :
+    step program state = .ok { state with pc := nextPc state.pc } := by
+  unfold step
+  simp [hpc, hinstr, hcell]
+
+theorem step_jumpIfNonZero_zero_advances (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (target : ProgramCounter program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .jumpIfNonZero target)
+    (hcell : (Tape.read state.machine.tape state.machine.pointer).val = 0) :
+    step program state = .ok { state with pc := nextPc state.pc } := by
+  unfold step
+  simp [hpc, hinstr, hcell]
+
+theorem step_jumpIfNonZero_nonzero_uses_target (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (target : ProgramCounter program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .jumpIfNonZero target)
+    (hcell : (Tape.read state.machine.tape state.machine.pointer).val ≠ 0) :
+    step program state = .ok { state with pc := target } := by
+  unfold step
+  simp [hpc, hinstr, hcell]
+
+theorem step_simple_loop_zero_jumps_to_termination :
+    step simpleLoopProgram simpleLoopZeroState =
+      .ok { simpleLoopZeroState with pc := ⟨2, by decide⟩ } := by
+  native_decide
+
+theorem step_simple_loop_nonzero_enters_loop_body :
+    step simpleLoopProgram simpleLoopNonZeroStartState =
+      .ok { simpleLoopNonZeroStartState with pc := ⟨1, by decide⟩ } := by
+  native_decide
+
+theorem step_simple_loop_nonzero_loop_end_jumps_back :
+    step simpleLoopProgram simpleLoopNonZeroEndState =
+      .ok { simpleLoopNonZeroEndState with pc := ⟨0, by decide⟩ } := by
+  native_decide
 
 end Brainfuck.Proofs
