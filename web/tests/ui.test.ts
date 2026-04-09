@@ -46,7 +46,8 @@ class RunnerBackedRuntimeClient implements RuntimeClient {
       this.listeners.forEach((listener) => {
         listener(event);
       });
-    }
+    },
+    pause: () => Promise.resolve()
   });
 
   send(request: WorkerRequest): void {
@@ -64,16 +65,6 @@ class RunnerBackedRuntimeClient implements RuntimeClient {
     this.listeners.clear();
   }
 }
-
-const getMetricValues = (root: HTMLElement): Record<string, string> => {
-  const metrics = Array.from(root.querySelectorAll<HTMLElement>(".metric"));
-  return Object.fromEntries(
-    metrics.map((metric) => [
-      metric.querySelector(".metric__label")?.textContent ?? "",
-      metric.querySelector(".metric__value")?.textContent ?? ""
-    ])
-  );
-};
 
 const createProgressState = (): ExecState => {
   const initial = initialExecState([]);
@@ -100,6 +91,24 @@ afterEach(() => {
 });
 
 describe("browser UI shell", () => {
+  it("renders onboarding copy, documentation link, and field explanations", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const client = new FakeRuntimeClient();
+
+    appHandle = mountApp(root, client);
+
+    const wikiLink = root.querySelector<HTMLAnchorElement>('a[href="https://en.wikipedia.org/wiki/Brainfuck"]');
+
+    expect(root.textContent).toContain("Start with an example");
+    expect(root.textContent).toContain("Program source");
+    expect(root.textContent).toContain("Program input");
+    expect(root.textContent).toContain("Each , instruction consumes one character");
+    expect(root.textContent).toContain("Play animates execution at the default pace");
+    expect(wikiLink?.textContent).toBe("Brainfuck on Wikipedia");
+    expect(wikiLink?.target).toBe("_blank");
+  });
+
   it("loads an example into controls and updates status", () => {
     const root = document.createElement("div");
     document.body.append(root);
@@ -112,6 +121,8 @@ describe("browser UI shell", () => {
     );
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const input = root.querySelector<HTMLInputElement>('input[name="input"]');
+    const examplesSummary = root.querySelector<HTMLElement>(".examples-panel__summary");
+    const examplesDescription = root.querySelector<HTMLElement>(".examples-panel__description");
     const statusLabel = root.querySelector<HTMLElement>(".status__label");
     const statusDetail = root.querySelector<HTMLElement>(".status__detail");
 
@@ -119,11 +130,13 @@ describe("browser UI shell", () => {
 
     expect(source?.value).toContain("++++++++++");
     expect(input?.value).toBe("");
+    expect(examplesSummary?.textContent).toContain("Hello World");
+    expect(examplesDescription?.textContent).toBe("Canonical Brainfuck hello world program.");
     expect(statusLabel?.textContent).toBe("Example loaded");
-    expect(statusDetail?.textContent).toBe("Canonical Brainfuck hello world program.");
+    expect(statusDetail?.textContent).toBe("Ready to run Hello World");
   });
 
-  it("dispatches run requests through the runtime client", () => {
+  it("dispatches play requests through the runtime client", () => {
     const root = document.createElement("div");
     document.body.append(root);
     const client = new FakeRuntimeClient();
@@ -132,37 +145,33 @@ describe("browser UI shell", () => {
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const input = root.querySelector<HTMLInputElement>('input[name="input"]');
-    const budget = root.querySelector<HTMLInputElement>('input[name="budget"]');
-    const runButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
-      (button) => button.textContent === "Run"
+    const playButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Play"
     );
 
     expect(source).not.toBeNull();
     expect(input).not.toBeNull();
-    expect(budget).not.toBeNull();
-    expect(runButton).not.toBeUndefined();
-    if (source === null || input === null || budget === null || runButton === undefined) {
+    expect(playButton).not.toBeUndefined();
+    if (source === null || input === null || playButton === undefined) {
       return;
     }
 
     source.value = "+.";
     input.value = "A";
-    budget.value = "invalid";
 
-    runButton.click();
+    playButton.click();
 
     expect(client.requests).toEqual([
       {
-        tag: "run",
+        tag: "play",
         source: "+.",
-        input: [makeCell(65)],
-        budget: 1000
+        input: [makeCell(65)]
       }
     ]);
-    expect(root.querySelector(".status__label")?.textContent).toBe("Starting");
+    expect(root.querySelector(".status__label")?.textContent).toBe("Running");
   });
 
-  it("normalizes negative budget input through the shared runtime budget path", () => {
+  it("dispatches single-step requests through the runtime client", () => {
     const root = document.createElement("div");
     document.body.append(root);
     const client = new FakeRuntimeClient();
@@ -170,38 +179,44 @@ describe("browser UI shell", () => {
     appHandle = mountApp(root, client);
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
-    const budget = root.querySelector<HTMLInputElement>('input[name="budget"]');
-    const runButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
-      (button) => button.textContent === "Run"
+    const stepButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Step"
     );
 
     expect(source).not.toBeNull();
-    expect(budget).not.toBeNull();
-    expect(runButton).not.toBeUndefined();
-    if (source === null || budget === null || runButton === undefined) {
+    expect(stepButton).not.toBeUndefined();
+    if (source === null || stepButton === undefined) {
       return;
     }
 
     source.value = "+";
-    budget.value = "-5";
-    runButton.click();
+    stepButton.click();
 
     expect(client.requests.at(-1)).toEqual({
-      tag: "run",
+      tag: "step",
       source: "+",
-      input: [],
-      budget: 1
+      input: []
     });
   });
 
-  it("renders progress events into output and inspector state", () => {
+  it("renders progress events into output and execution view", () => {
     const root = document.createElement("div");
     document.body.append(root);
     const client = new FakeRuntimeClient();
     const state = createProgressState();
 
     appHandle = mountApp(root, client);
+    const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
+    expect(source).not.toBeNull();
+    if (source === null) {
+      return;
+    }
+    source.value = ",.+";
 
+    const playButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Play"
+    );
+    playButton?.click();
     client.emit({
       tag: "progress",
       snapshot: createMachineSnapshot(state),
@@ -214,13 +229,10 @@ describe("browser UI shell", () => {
     expect(root.querySelector(".status__detail")?.textContent).toBe("PC 2 · Pointer 0 · Steps 2");
     expect(root.querySelector(".output__text")?.textContent).toBe("A");
     expect(root.querySelector(".output__bytes")?.textContent).toBe("[65]");
-
-    const metrics = getMetricValues(root);
-    expect(metrics.PC).toBe("2");
-    expect(metrics.Pointer).toBe("0");
-    expect(metrics.Cell).toBe("65");
-    expect(metrics.Output).toBe("1");
+    expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe("PC 2 / 3");
+    expect(root.querySelector(".program-visualizer__char--current")?.textContent).toBe("+");
     expect(root.querySelector(".tape-window")?.textContent).toContain("65");
+    expect(root.querySelectorAll(".tape-cell")).toHaveLength(11);
   });
 
   it("resets visible state and sends stop to the runtime client", () => {
@@ -248,11 +260,26 @@ describe("browser UI shell", () => {
     expect(root.querySelector(".status__label")?.textContent).toBe("Reset");
     expect(root.querySelector(".output__text")?.textContent).toBe("");
     expect(root.querySelector(".output__bytes")?.textContent).toBe("[]");
+    expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe("No executable instructions yet.");
+    expect(root.querySelector(".tape-cell--pointer .tape-cell__value")?.textContent).toBe("0");
+  });
 
-    const metrics = getMetricValues(root);
-    expect(metrics.PC).toBe("0");
-    expect(metrics.Pointer).toBe("0");
-    expect(metrics.Cell).toBe("0");
+  it("sends pause requests and reflects paused state", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const client = new FakeRuntimeClient();
+
+    appHandle = mountApp(root, client);
+
+    const pauseButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Pause"
+    );
+
+    pauseButton?.click();
+    expect(client.requests.at(-1)).toEqual({ tag: "pause" });
+
+    client.emit({ tag: "paused" });
+    expect(root.querySelector(".status__label")?.textContent).toBe("Paused");
   });
 
   it("uses the same snapshot shape for initial/reset state as runtime snapshots", () => {
@@ -262,11 +289,8 @@ describe("browser UI shell", () => {
 
     appHandle = mountApp(root, client);
 
-    const metrics = getMetricValues(root);
-    expect(metrics.PC).toBe("0");
-    expect(metrics.Pointer).toBe("0");
-    expect(metrics.Cell).toBe("0");
-    expect(root.querySelectorAll(".tape-cell")).toHaveLength(5);
+    expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe("No executable instructions yet.");
+    expect(root.querySelectorAll(".tape-cell")).toHaveLength(11);
 
     const input = root.querySelector<HTMLInputElement>('input[name="input"]');
     const resetButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
@@ -281,9 +305,8 @@ describe("browser UI shell", () => {
     input.value = "AB";
     resetButton.click();
 
-    const afterResetMetrics = getMetricValues(root);
-    expect(afterResetMetrics.Input).toBe("2");
-    expect(root.querySelectorAll(".tape-cell")).toHaveLength(5);
+    expect(root.querySelector(".tape-cell--pointer .tape-cell__value")?.textContent).toBe("0");
+    expect(root.querySelectorAll(".tape-cell")).toHaveLength(11);
   });
 
   it("renders validation and runtime errors in the status view", () => {
@@ -299,6 +322,7 @@ describe("browser UI shell", () => {
     });
     expect(root.querySelector(".status__label")?.textContent).toBe("Validation error");
     expect(root.querySelector(".status__detail")?.textContent).toBe("unmatchedLoopEnd");
+    expect(root.querySelector(".status-note")?.classList.contains("status-note--error")).toBe(true);
 
     client.emit({
       tag: "runtimeError",
@@ -322,16 +346,12 @@ describe("browser UI shell", () => {
 
     appHandle = mountApp(root, client);
 
-    const stopButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
-      (button) => button.textContent === "Stop"
-    );
     const resetButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
       (button) => button.textContent === "Reset"
     );
 
-    stopButton?.click();
-    client.emit({ tag: "stopped" });
-    expect(root.querySelector(".status__label")?.textContent).toBe("Stopped");
+    client.emit({ tag: "paused" });
+    expect(root.querySelector(".status__label")?.textContent).toBe("Paused");
 
     resetButton?.click();
     client.emit({ tag: "stopped" });
@@ -352,29 +372,27 @@ describe("browser UI shell", () => {
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const input = root.querySelector<HTMLInputElement>('input[name="input"]');
-    const runButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
-      (button) => button.textContent === "Run"
+    const playButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Play"
     );
 
     expect(source).not.toBeNull();
     expect(input).not.toBeNull();
-    expect(runButton).not.toBeUndefined();
-    if (source === null || input === null || runButton === undefined) {
+    expect(playButton).not.toBeUndefined();
+    if (source === null || input === null || playButton === undefined) {
       return;
     }
 
     source.value = ",.";
     input.value = "A";
-    runButton.click();
+    playButton.click();
     await Promise.resolve();
 
     expect(root.querySelector(".status__label")?.textContent).toBe("Finished");
     expect(root.querySelector(".output__text")?.textContent).toBe("A");
     expect(root.querySelector(".output__bytes")?.textContent).toBe("[65]");
 
-    const metrics = getMetricValues(root);
-    expect(metrics.PC).toBe("2");
-    expect(metrics.Input).toBe("0");
-    expect(metrics.Output).toBe("1");
+    expect(root.querySelector(".status__detail")?.textContent).toBe("PC 2 · Pointer 0 · Steps 2");
+    expect(root.querySelector(".program-visualizer__char--past")?.textContent).toBe(",");
   });
 });

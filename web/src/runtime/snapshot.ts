@@ -11,7 +11,7 @@ export const createMachineSnapshot = (state: ExecState): MachineSnapshot => ({
   currentCell: readTape(state.machine.tape, state.machine.pointer) as number,
   inputLength: state.machine.input.length,
   outputLength: state.machine.output.length,
-  tapeWindow: inspectTapeWindow(state.machine.tape, state.machine.pointer, 4)
+  tapeWindow: inspectTapeWindow(state.machine.tape, state.machine.pointer, 10)
 });
 
 export const createInitialMachineSnapshot = (input: readonly Cell[] = []): MachineSnapshot =>

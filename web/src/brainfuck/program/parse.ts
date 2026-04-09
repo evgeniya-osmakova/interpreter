@@ -3,6 +3,12 @@ import type { ValidationError } from "../core/error";
 import type { InstructionToken } from "../core/instruction";
 import type { RawProgram } from "./raw-program";
 
+export interface SourceInstruction {
+  readonly sourceIndex: number;
+  readonly token: InstructionToken;
+  readonly char: string;
+}
+
 const charToToken = (char: string): InstructionToken | null => {
   switch (char) {
     case ">":
@@ -26,15 +32,21 @@ const charToToken = (char: string): InstructionToken | null => {
   }
 };
 
-export const parse = (source: string): Result<RawProgram, ValidationError> => {
-  const instructions: InstructionToken[] = [];
+export const scanInstructions = (source: string): readonly SourceInstruction[] => {
+  const instructions: SourceInstruction[] = [];
 
-  for (const char of source) {
+  Array.from(source).forEach((char, sourceIndex) => {
     const token = charToToken(char);
     if (token !== null) {
-      instructions.push(token);
+      instructions.push({ sourceIndex, token, char });
     }
-  }
+  });
 
-  return ok<RawProgram, ValidationError>({ instructions });
+  return instructions;
+};
+
+export const parse = (source: string): Result<RawProgram, ValidationError> => {
+  return ok<RawProgram, ValidationError>({
+    instructions: scanInstructions(source).map((instruction) => instruction.token)
+  });
 };

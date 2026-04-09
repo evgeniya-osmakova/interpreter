@@ -4,12 +4,14 @@ import type { TapeWindowCell } from "../brainfuck/core/tape";
 import type { RuntimeError, ValidationError } from "../brainfuck/core/error";
 
 export type WorkerRequest =
-  | { readonly tag: "run"; readonly source: string; readonly input: readonly Cell[]; readonly budget: number }
+  | { readonly tag: "play"; readonly source: string; readonly input: readonly Cell[] }
+  | { readonly tag: "step"; readonly source: string; readonly input: readonly Cell[] }
+  | { readonly tag: "pause" }
   | { readonly tag: "stop" };
 
 export type ProtocolError =
   | { readonly tag: "invalidRequest"; readonly detail: string }
-  | { readonly tag: "invalidRunField"; readonly field: "source" | "input" | "budget"; readonly detail: string };
+  | { readonly tag: "invalidRunField"; readonly field: "source" | "input"; readonly detail: string };
 
 export interface MachineSnapshot {
   readonly pc: number;
@@ -26,6 +28,7 @@ export type WorkerEvent =
   | { readonly tag: "validationError"; readonly error: ValidationError }
   | { readonly tag: "runtimeError"; readonly error: RuntimeError }
   | { readonly tag: "protocolError"; readonly error: ProtocolError }
+  | { readonly tag: "paused" }
   | {
       readonly tag: "progress";
       readonly snapshot: MachineSnapshot;
@@ -209,7 +212,7 @@ const decodeProtocolError = (value: unknown): Result<ProtocolError, ProtocolErro
         ? ok({ tag: "invalidRequest", detail: value.detail })
         : err({ tag: "invalidRequest", detail: "expected invalidRequest detail" });
     case "invalidRunField":
-      return (value.field === "source" || value.field === "input" || value.field === "budget") &&
+      return (value.field === "source" || value.field === "input") &&
           typeof value.detail === "string"
         ? ok({ tag: "invalidRunField", field: value.field, detail: value.detail })
         : err({ tag: "invalidRequest", detail: "expected invalidRunField payload" });
@@ -233,10 +236,14 @@ export const decodeWorkerRequest = (value: unknown): Result<WorkerRequest, Proto
     return ok({ tag: "stop" });
   }
 
-  if (value.tag !== "run") {
+  if (value.tag === "pause") {
+    return ok({ tag: "pause" });
+  }
+
+  if (value.tag !== "play" && value.tag !== "step") {
     return err({
       tag: "invalidRequest",
-      detail: "expected request tag 'run' or 'stop'"
+      detail: "expected request tag 'play', 'step', 'pause', or 'stop'"
     });
   }
 
@@ -248,24 +255,15 @@ export const decodeWorkerRequest = (value: unknown): Result<WorkerRequest, Proto
     });
   }
 
-  if (typeof value.budget !== "number" || !Number.isFinite(value.budget)) {
-    return err({
-      tag: "invalidRunField",
-      field: "budget",
-      detail: "expected budget to be a finite number"
-    });
-  }
-
   const input = decodeInput(value.input);
   if (input.tag === "err") {
     return input;
   }
 
   return ok({
-    tag: "run",
+    tag: value.tag,
     source: value.source,
-    input: input.value,
-    budget: value.budget
+    input: input.value
   });
 };
 
@@ -296,6 +294,8 @@ export const decodeWorkerEvent = (value: unknown): Result<WorkerEvent, ProtocolE
         ? ok({ tag: "protocolError", error: decoded.value })
         : decoded;
     }
+    case "paused":
+      return ok({ tag: "paused" });
     case "stopped":
       return ok({ tag: "stopped" });
     case "progress": {
