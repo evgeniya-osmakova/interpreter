@@ -3,7 +3,7 @@ import { movePointerLeft, movePointerRight } from "../core/pointer";
 import { err, ok, type Result } from "../core/result";
 import type { ExecState } from "../core/state";
 import { decrementTapeCell, incrementTapeCell, readTape, writeTape } from "../core/tape";
-import type { ValidatedProgram } from "../program/validated-program";
+import { getValidatedInstruction, type ValidatedProgram } from "../program/validated-program";
 
 export const isTerminated = (program: ValidatedProgram, state: ExecState): boolean =>
   state.pc >= program.length;
@@ -19,10 +19,7 @@ export const step = (
     return ok(state);
   }
 
-  const instruction = program.instructions[state.pc];
-  if (instruction === undefined) {
-    return ok(state);
-  }
+  const instruction = getValidatedInstruction(program, state.pc);
 
   switch (instruction.tag) {
     case "moveRight": {

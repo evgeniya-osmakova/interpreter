@@ -4,6 +4,7 @@ import type { InstructionToken } from "../core/instruction";
 import type { RawProgram } from "./raw-program";
 import {
   makeJumpTarget,
+  makeValidatedProgram,
   type JumpTarget,
   type ValidatedInstruction,
   type ValidatedProgram
@@ -117,8 +118,5 @@ export const validate = (program: RawProgram): Result<ValidatedProgram, Validati
     instructions.push(instruction.value);
   }
 
-  return ok({
-    length: instructions.length,
-    instructions
-  });
+  return ok(makeValidatedProgram(instructions));
 };

@@ -20,6 +20,18 @@ export interface ValidatedProgram {
   readonly instructions: readonly ValidatedInstruction[];
 }
 
+export const makeValidatedProgram = (
+  instructions: readonly ValidatedInstruction[]
+): ValidatedProgram => ({
+  length: instructions.length,
+  instructions
+});
+
+export const getValidatedInstruction = (
+  program: ValidatedProgram,
+  pc: number
+): ValidatedInstruction => program.instructions[pc] as ValidatedInstruction;
+
 export const makeJumpTarget = (
   value: number,
   length: number,

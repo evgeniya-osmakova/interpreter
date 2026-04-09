@@ -63,4 +63,20 @@ describe("validation", () => {
       }
     });
   });
+
+  it("derives validated length from the instruction array", () => {
+    const parsed = parse("+[]");
+    expect(parsed.tag).toBe("ok");
+    if (parsed.tag !== "ok") {
+      return;
+    }
+
+    const validated = validate(parsed.value);
+    expect(validated.tag).toBe("ok");
+    if (validated.tag !== "ok") {
+      return;
+    }
+
+    expect(validated.value.length).toBe(validated.value.instructions.length);
+  });
 });

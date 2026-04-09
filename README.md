@@ -102,6 +102,7 @@ Why this is the best tradeoff:
 - In Lean, `jumpIfZero` can jump directly to normal termination when the matching `]` is the final instruction, which is a more exact operational model than storing only a bracket index.
 - In Lean, program length is part of the type of both instructions and execution state, which makes step semantics and later proofs more direct.
 - In TypeScript, the same shape mirrors naturally using a branded `JumpTarget` number produced only by validation.
+- In TypeScript, `makeValidatedProgram` derives `length` from the validated instruction array, so the normal construction path cannot drift into a mismatched `length`/`instructions` pair.
 - This is better than evaluating raw `[` and `]` tokens directly because the PDF requires bracket matching before execution.
 - This is better than storing a separate external jump map because the target is carried by the validated instruction itself, so the mirrored structure stays local and explicit in both phases.
 
