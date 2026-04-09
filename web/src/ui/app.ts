@@ -1,7 +1,8 @@
 import type { Cell } from "../brainfuck/core/cell";
 import { makeCell } from "../brainfuck/core/cell";
 import { createWorkerRuntimeClient, type RuntimeClient } from "../runtime/client";
-import type { MachineSnapshot, WorkerEvent, WorkerRequest } from "../runtime/worker-protocol";
+import { createInitialMachineSnapshot } from "../runtime/snapshot";
+import type { WorkerEvent, WorkerRequest } from "../runtime/worker-protocol";
 import { renderControls } from "./controls";
 import { PROGRAM_EXAMPLES } from "./examples";
 import { renderInspectorView } from "./inspector-view";
@@ -18,19 +19,6 @@ const readBudget = (value: string): number => {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1000;
 };
-
-const createInitialSnapshot = (inputLength: number): MachineSnapshot => ({
-  pc: 0,
-  pointer: 0,
-  currentCell: 0,
-  inputLength,
-  outputLength: 0,
-  tapeWindow: Array.from({ length: 5 }, (_, offset) => ({
-    index: offset,
-    value: 0,
-    isPointer: offset === 0
-  }))
-});
 
 export interface AppHandle {
   dispose: () => void;
@@ -96,7 +84,7 @@ export const mountApp = (
     totalSteps = 0;
     resetRequested = false;
     output.setOutput("", []);
-    inspector.setSnapshot(createInitialSnapshot(textToCells(controls.input.value).length));
+    inspector.setSnapshot(createInitialMachineSnapshot(textToCells(controls.input.value)));
 
     const request: WorkerRequest = {
       tag: "run",
@@ -116,7 +104,7 @@ export const mountApp = (
     resetRequested = true;
     totalSteps = 0;
     output.setOutput("", []);
-    inspector.setSnapshot(createInitialSnapshot(textToCells(controls.input.value).length));
+    inspector.setSnapshot(createInitialMachineSnapshot(textToCells(controls.input.value)));
     status.setStatus("Reset", "State cleared in UI");
     runtimeClient.send({ tag: "stop" } satisfies WorkerRequest);
   });
@@ -137,7 +125,7 @@ export const mountApp = (
     status.setStatus("Example loaded", example.description);
   });
 
-  inspector.setSnapshot(createInitialSnapshot(0));
+  inspector.setSnapshot(createInitialMachineSnapshot());
   output.setOutput("", []);
   status.setStatus("Idle", "Ready to validate and run a Brainfuck program");
 

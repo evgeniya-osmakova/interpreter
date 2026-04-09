@@ -1,3 +1,5 @@
+import type { Cell } from "../brainfuck/core/cell";
+import { initialExecState } from "../brainfuck/core/state";
 import { programCounterValue } from "../brainfuck/core/program-counter";
 import { readTape, inspectTapeWindow } from "../brainfuck/core/tape";
 import type { ExecState } from "../brainfuck/core/state";
@@ -11,3 +13,6 @@ export const createMachineSnapshot = (state: ExecState): MachineSnapshot => ({
   outputLength: state.machine.output.length,
   tapeWindow: inspectTapeWindow(state.machine.tape, state.machine.pointer, 4)
 });
+
+export const createInitialMachineSnapshot = (input: readonly Cell[] = []): MachineSnapshot =>
+  createMachineSnapshot(initialExecState(input));

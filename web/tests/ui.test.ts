@@ -196,6 +196,37 @@ describe("browser UI shell", () => {
     expect(metrics.Cell).toBe("0");
   });
 
+  it("uses the same snapshot shape for initial/reset state as runtime snapshots", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const client = new FakeRuntimeClient();
+
+    appHandle = mountApp(root, client);
+
+    const metrics = getMetricValues(root);
+    expect(metrics.PC).toBe("0");
+    expect(metrics.Pointer).toBe("0");
+    expect(metrics.Cell).toBe("0");
+    expect(root.querySelectorAll(".tape-cell")).toHaveLength(5);
+
+    const input = root.querySelector<HTMLInputElement>('input[name="input"]');
+    const resetButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Reset"
+    );
+    expect(input).not.toBeNull();
+    expect(resetButton).not.toBeUndefined();
+    if (input === null || resetButton === undefined) {
+      return;
+    }
+
+    input.value = "AB";
+    resetButton.click();
+
+    const afterResetMetrics = getMetricValues(root);
+    expect(afterResetMetrics.Input).toBe("2");
+    expect(root.querySelectorAll(".tape-cell")).toHaveLength(5);
+  });
+
   it("renders validation and runtime errors in the status view", () => {
     const root = document.createElement("div");
     document.body.append(root);
