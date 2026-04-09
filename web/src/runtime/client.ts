@@ -1,4 +1,4 @@
-import type { WorkerEvent, WorkerRequest } from "./worker-protocol";
+import { decodeWorkerEvent, type WorkerEvent, type WorkerRequest } from "./worker-protocol";
 
 export type RuntimeEventHandler = (event: WorkerEvent) => void;
 
@@ -14,9 +14,15 @@ export const createWorkerRuntimeClient = (): RuntimeClient => {
   });
   const listeners = new Set<RuntimeEventHandler>();
 
-  worker.onmessage = (message: MessageEvent<WorkerEvent>): void => {
+  worker.onmessage = (message: MessageEvent<unknown>): void => {
+    const decoded = decodeWorkerEvent(message.data);
+    const event =
+      decoded.tag === "ok"
+        ? decoded.value
+        : ({ tag: "protocolError", error: decoded.error } satisfies WorkerEvent);
+
     listeners.forEach((listener) => {
-      listener(message.data);
+      listener(event);
     });
   };
 

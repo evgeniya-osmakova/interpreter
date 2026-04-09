@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeWorkerRequest } from "../src/runtime/worker-protocol";
+import { decodeWorkerEvent, decodeWorkerRequest } from "../src/runtime/worker-protocol";
 import { makeCell } from "../src/brainfuck/core/cell";
 
 describe("worker protocol", () => {
@@ -53,6 +53,67 @@ describe("worker protocol", () => {
         tag: "invalidRunField",
         field: "input",
         detail: "expected each input byte to be an integer in the range 0..255"
+      }
+    });
+  });
+});
+
+describe("worker event protocol", () => {
+  it("decodes a valid progress event", () => {
+    expect(
+      decodeWorkerEvent({
+        tag: "progress",
+        snapshot: {
+          pc: 1,
+          pointer: 0,
+          currentCell: 65,
+          inputLength: 0,
+          outputLength: 1,
+          tapeWindow: [
+            { index: 0, value: 65, isPointer: true },
+            { index: 1, value: 0, isPointer: false }
+          ]
+        },
+        output: [65],
+        done: true,
+        stepsExecuted: 1
+      })
+    ).toEqual({
+      tag: "ok",
+      value: {
+        tag: "progress",
+        snapshot: {
+          pc: 1,
+          pointer: 0,
+          currentCell: 65,
+          inputLength: 0,
+          outputLength: 1,
+          tapeWindow: [
+            { index: 0, value: 65, isPointer: true },
+            { index: 1, value: 0, isPointer: false }
+          ]
+        },
+        output: [65],
+        done: true,
+        stepsExecuted: 1
+      }
+    });
+  });
+
+  it("rejects malformed progress payloads", () => {
+    expect(
+      decodeWorkerEvent({
+        tag: "progress",
+        snapshot: "bad",
+        output: [65],
+        done: true,
+        stepsExecuted: 1
+      })
+    ).toEqual({
+      tag: "err",
+      error: {
+        tag: "invalidRequest",
+        detail: "expected snapshot to be an object"
       }
     });
   });
