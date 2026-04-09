@@ -134,4 +134,26 @@ describe("runSlice semantics", () => {
     expect(result.value.state.pc).toBe(1);
     expect(result.value.done).toBe(true);
   });
+
+  it("keeps done exactly in sync with termination of the returned state", () => {
+    const partialProgram = parseAndValidate("++");
+    const partial = runSlice(partialProgram, initialExecState(), 1);
+
+    expect(partial.tag).toBe("ok");
+    if (partial.tag !== "ok") {
+      return;
+    }
+
+    expect(partial.value.done).toBe(partial.value.state.pc === partialProgram.length);
+
+    const finishedProgram = parseAndValidate("+");
+    const finished = runSlice(finishedProgram, initialExecState(), 10);
+
+    expect(finished.tag).toBe("ok");
+    if (finished.tag !== "ok") {
+      return;
+    }
+
+    expect(finished.value.done).toBe(finished.value.state.pc === finishedProgram.length);
+  });
 });

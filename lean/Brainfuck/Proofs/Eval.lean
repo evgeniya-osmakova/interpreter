@@ -74,6 +74,36 @@ theorem runSlice_ok_steps_le_budget (program : ValidatedProgram)
                 have hle := ih nextState nextProgress hslice
                 exact Nat.succ_le_succ hle
 
+theorem runSlice_ok_done_matches_termination (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (budget : Nat)
+    (progress : SliceProgress program.length)
+    (h : runSlice program state budget = .ok progress) :
+    progress.done = isTerminated program progress.state := by
+  induction budget generalizing state progress with
+  | zero =>
+      simp [runSlice] at h
+      cases h
+      simp
+  | succ remaining ih =>
+      unfold runSlice at h
+      by_cases hterm : isTerminated program state
+      · simp [hterm] at h
+        cases h
+        simp [hterm]
+      · simp [hterm] at h
+        cases hstep : step program state with
+        | err error =>
+            simp [hstep] at h
+        | ok nextState =>
+            cases hslice : runSlice program nextState remaining with
+            | err error =>
+                simp [hstep, hslice] at h
+            | ok nextProgress =>
+                simp [hstep, hslice] at h
+                cases h
+                simpa using ih nextState nextProgress hslice
+
 theorem runFuel_zero_returns_initial (program : ValidatedProgram)
     (state : ExecState program.length) :
     runFuel program 0 state = .ok state := rfl
