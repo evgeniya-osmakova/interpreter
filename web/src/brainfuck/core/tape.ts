@@ -47,8 +47,10 @@ export const inspectTapeWindow = (
   radius: number
 ): readonly TapeWindowCell[] => {
   const center = pointer as number;
-  const start = Math.max(0, center - radius);
-  const end = Math.min(29999, center + radius);
+  const windowSize = radius * 2 + 1;
+  const maxStart = Math.max(0, 30000 - windowSize);
+  const start = Math.max(0, Math.min(center - radius, maxStart));
+  const end = start + windowSize - 1;
   const cells: TapeWindowCell[] = [];
 
   for (let index = start; index <= end; index += 1) {

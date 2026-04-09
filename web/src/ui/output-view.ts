@@ -1,37 +1,25 @@
 export interface OutputView {
   readonly element: HTMLElement;
-  setOutput: (text: string, bytes: readonly number[]) => void;
+  setOutput: (text: string) => void;
 }
 
 export const renderOutputView = (): OutputView => {
   const element = document.createElement("section");
-  element.className = "output";
+  element.className = "execution-subsection output";
 
-  const heading = document.createElement("h2");
-  heading.className = "panel-title";
+  const heading = document.createElement("h3");
+  heading.className = "control-field__label";
   heading.textContent = "Output";
-
-  const textLabel = document.createElement("p");
-  textLabel.className = "output__label";
-  textLabel.textContent = "Text";
 
   const text = document.createElement("pre");
   text.className = "output__text";
 
-  const bytesLabel = document.createElement("p");
-  bytesLabel.className = "output__label";
-  bytesLabel.textContent = "Bytes";
-
-  const bytes = document.createElement("code");
-  bytes.className = "output__bytes";
-
-  element.append(heading, textLabel, text, bytesLabel, bytes);
+  element.append(heading, text);
 
   return {
     element,
-    setOutput(value, byteValues) {
+    setOutput(value) {
       text.textContent = value;
-      bytes.textContent = byteValues.length === 0 ? "[]" : `[${byteValues.join(", ")}]`;
     }
   };
 };

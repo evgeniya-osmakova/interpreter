@@ -20,10 +20,9 @@ describe("runtime runner", () => {
     });
 
     await runner.handleRequest({
-      tag: "run",
+      tag: "play",
       source: "]",
-      input: [],
-      budget: 100
+      input: []
     });
 
     expect(events).toEqual([
@@ -43,10 +42,9 @@ describe("runtime runner", () => {
     });
 
     await runner.handleRequest({
-      tag: "run",
+      tag: "play",
       source: "<",
-      input: [],
-      budget: 100
+      input: []
     });
 
     expect(events).toEqual([
@@ -66,10 +64,9 @@ describe("runtime runner", () => {
     });
 
     await runner.handleRequest({
-      tag: "run",
+      tag: "step",
       source: "+",
-      input: [],
-      budget: 100
+      input: []
     });
 
     expect(events).toHaveLength(1);
@@ -90,7 +87,7 @@ describe("runtime runner", () => {
     );
   });
 
-  it("stops a long-running run between slices", async () => {
+  it("pauses a long-running run between animated steps", async () => {
     const events: WorkerEvent[] = [];
     const gate = deferred();
     const runner = createRunner({
@@ -101,10 +98,9 @@ describe("runtime runner", () => {
     });
 
     const runRequest: WorkerRequest = {
-      tag: "run",
+      tag: "play",
       source: "+[]",
-      input: [],
-      budget: 1
+      input: []
     };
 
     const runPromise = runner.handleRequest(runRequest);
@@ -120,15 +116,15 @@ describe("runtime runner", () => {
 
     expect(events[0].done).toBe(false);
 
-    await runner.handleRequest({ tag: "stop" });
+    await runner.handleRequest({ tag: "pause" });
     gate.resolve();
     await runPromise;
 
-    expect(events.at(-1)).toEqual({ tag: "stopped" });
+    expect(events.at(-1)).toEqual({ tag: "paused" });
     expect(events.filter((event) => event.tag === "progress")).toHaveLength(1);
   });
 
-  it("normalizes non-positive budgets so the runner still makes progress", async () => {
+  it("steps through a session without restarting it", async () => {
     const events: WorkerEvent[] = [];
     const runner = createRunner({
       emit(event) {
@@ -136,22 +132,16 @@ describe("runtime runner", () => {
       }
     });
 
-    await runner.handleRequest({
-      tag: "run",
-      source: "+",
-      input: [],
-      budget: 0
-    });
+    await runner.handleRequest({ tag: "step", source: "++", input: [] });
+    await runner.handleRequest({ tag: "step", source: "++", input: [] });
 
-    expect(events).toHaveLength(1);
-    expect(events[0]?.tag).toBe("progress");
-    if (events[0]?.tag !== "progress") {
-      return;
-    }
-
-    expect(events[0].stepsExecuted).toBe(1);
-    expect(events[0].done).toBe(true);
-    expect(events[0].snapshot.pc).toBe(1);
+    const progressEvents = events.filter((event): event is Extract<WorkerEvent, { tag: "progress" }> => event.tag === "progress");
+    expect(progressEvents).toHaveLength(2);
+    expect(progressEvents[0]?.snapshot.pc).toBe(1);
+    expect(progressEvents[0]?.snapshot.currentCell).toBe(1);
+    expect(progressEvents[1]?.snapshot.pc).toBe(2);
+    expect(progressEvents[1]?.snapshot.currentCell).toBe(2);
+    expect(progressEvents[1]?.done).toBe(true);
   });
 
   it("suppresses stale progress when a newer run replaces the active run", async () => {
@@ -165,10 +155,9 @@ describe("runtime runner", () => {
     });
 
     const firstRun = runner.handleRequest({
-      tag: "run",
+      tag: "play",
       source: "+[]",
-      input: [],
-      budget: 1
+      input: []
     });
     await Promise.resolve();
 
@@ -176,10 +165,9 @@ describe("runtime runner", () => {
     expect(events[0]?.tag).toBe("progress");
 
     await runner.handleRequest({
-      tag: "run",
+      tag: "play",
       source: "+",
-      input: [],
-      budget: 1
+      input: []
     });
 
     gate.resolve();

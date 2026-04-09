@@ -20,9 +20,16 @@ export const PROGRAM_EXAMPLES: readonly ProgramExample[] = [
   {
     id: "count-a",
     label: "Print A",
-    source: "++++++[>+++++++++++<-]>+.",
+    source: "+++++[>+++++++++++++<-]>.",
     input: "",
-    description: "Short loop-based program that emits a single ASCII character."
+    description: "Short loop-based program that emits the ASCII character A."
+  },
+  {
+    id: "echo-two",
+    label: "Echo 2 chars",
+    source: ",.,.",
+    input: "AB",
+    description: "Reads two characters from Program input. Try replacing AB with any two characters, then run the program."
   },
   {
     id: "pointer-error",

@@ -3,26 +3,32 @@ import { decodeWorkerEvent, decodeWorkerRequest } from "../src/runtime/worker-pr
 import { makeCell } from "../src/brainfuck/core/cell";
 
 describe("worker protocol", () => {
-  it("decodes a valid run request", () => {
+  it("decodes a valid play request", () => {
     expect(
       decodeWorkerRequest({
-        tag: "run",
+        tag: "play",
         source: "+.",
-        input: [65],
-        budget: 10
+        input: [65]
       })
     ).toEqual({
       tag: "ok",
       value: {
-        tag: "run",
+        tag: "play",
         source: "+.",
-        input: [makeCell(65)],
-        budget: 10
+        input: [makeCell(65)]
       }
     });
   });
 
-  it("decodes a valid stop request", () => {
+  it("decodes step, pause, and stop requests", () => {
+    expect(decodeWorkerRequest({ tag: "step", source: ",", input: [] })).toEqual({
+      tag: "ok",
+      value: { tag: "step", source: ",", input: [] }
+    });
+    expect(decodeWorkerRequest({ tag: "pause" })).toEqual({
+      tag: "ok",
+      value: { tag: "pause" }
+    });
     expect(decodeWorkerRequest({ tag: "stop" })).toEqual({
       tag: "ok",
       value: { tag: "stop" }
@@ -30,11 +36,11 @@ describe("worker protocol", () => {
   });
 
   it("rejects malformed request tags", () => {
-    expect(decodeWorkerRequest({ tag: "pause" })).toEqual({
+    expect(decodeWorkerRequest({ tag: "run" })).toEqual({
       tag: "err",
       error: {
         tag: "invalidRequest",
-        detail: "expected request tag 'run' or 'stop'"
+        detail: "expected request tag 'play', 'step', 'pause', or 'stop'"
       }
     });
   });
@@ -42,10 +48,9 @@ describe("worker protocol", () => {
   it("rejects invalid input bytes", () => {
     expect(
       decodeWorkerRequest({
-        tag: "run",
+        tag: "play",
         source: ",",
-        input: [999],
-        budget: 10
+        input: [999]
       })
     ).toEqual({
       tag: "err",
@@ -59,6 +64,13 @@ describe("worker protocol", () => {
 });
 
 describe("worker event protocol", () => {
+  it("decodes a paused event", () => {
+    expect(decodeWorkerEvent({ tag: "paused" })).toEqual({
+      tag: "ok",
+      value: { tag: "paused" }
+    });
+  });
+
   it("decodes a valid progress event", () => {
     expect(
       decodeWorkerEvent({
