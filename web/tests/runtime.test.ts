@@ -127,4 +127,73 @@ describe("runtime runner", () => {
     expect(events.at(-1)).toEqual({ tag: "stopped" });
     expect(events.filter((event) => event.tag === "progress")).toHaveLength(1);
   });
+
+  it("normalizes non-positive budgets so the runner still makes progress", async () => {
+    const events: WorkerEvent[] = [];
+    const runner = createRunner({
+      emit(event) {
+        events.push(event);
+      }
+    });
+
+    await runner.handleRequest({
+      tag: "run",
+      source: "+",
+      input: [],
+      budget: 0
+    });
+
+    expect(events).toHaveLength(1);
+    expect(events[0]?.tag).toBe("progress");
+    if (events[0]?.tag !== "progress") {
+      return;
+    }
+
+    expect(events[0].stepsExecuted).toBe(1);
+    expect(events[0].done).toBe(true);
+    expect(events[0].state.pc).toBe(1);
+  });
+
+  it("suppresses stale progress when a newer run replaces the active run", async () => {
+    const events: WorkerEvent[] = [];
+    const gate = deferred();
+    const runner = createRunner({
+      emit(event) {
+        events.push(event);
+      },
+      pause: () => gate.promise
+    });
+
+    const firstRun = runner.handleRequest({
+      tag: "run",
+      source: "+[]",
+      input: [],
+      budget: 1
+    });
+    await Promise.resolve();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]?.tag).toBe("progress");
+
+    await runner.handleRequest({
+      tag: "run",
+      source: "+",
+      input: [],
+      budget: 1
+    });
+
+    gate.resolve();
+    await firstRun;
+
+    expect(events.filter((event) => event.tag === "progress")).toHaveLength(2);
+    const finalProgress = events.at(-1);
+    expect(finalProgress?.tag).toBe("progress");
+    if (finalProgress?.tag !== "progress") {
+      return;
+    }
+
+    expect(finalProgress.done).toBe(true);
+    expect(finalProgress.state.pc).toBe(1);
+    expect(finalProgress.stepsExecuted).toBe(1);
+  });
 });

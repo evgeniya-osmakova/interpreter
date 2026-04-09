@@ -12,6 +12,14 @@ export interface RunnerDeps {
 
 const defaultPause = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
+const normalizeBudget = (budget: number): number => {
+  if (!Number.isFinite(budget)) {
+    return 1;
+  }
+
+  return Math.max(1, Math.trunc(budget));
+};
+
 export const createRunner = (deps: RunnerDeps) => {
   let stopped = false;
   let activeRunId = 0;
@@ -25,6 +33,7 @@ export const createRunner = (deps: RunnerDeps) => {
     request: Extract<WorkerRequest, { tag: "run" }>
   ): Promise<void> => {
     stopped = false;
+    const budget = normalizeBudget(request.budget);
 
     const parsed = parse(request.source);
     if (parsed.tag === "err") {
@@ -45,7 +54,7 @@ export const createRunner = (deps: RunnerDeps) => {
     let current = initialExecState(request.input);
 
     while (isCurrentRun(runId)) {
-      const slice = runSlice(validated.value, current, request.budget);
+      const slice = runSlice(validated.value, current, budget);
       if (slice.tag === "err") {
         if (activeRunId === runId) {
           deps.emit({ tag: "runtimeError", error: slice.error });
