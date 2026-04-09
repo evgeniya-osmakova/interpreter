@@ -3,7 +3,7 @@ import { makeCell } from "../src/brainfuck/core/cell";
 import { parse } from "../src/brainfuck/program/parse";
 import { validate } from "../src/brainfuck/program/validate";
 import { initialExecState } from "../src/brainfuck/core/state";
-import { writeTape } from "../src/brainfuck/core/tape";
+import { readTape, writeTape } from "../src/brainfuck/core/tape";
 import { runWithInput } from "../src/brainfuck/semantics/eval";
 import { step } from "../src/brainfuck/semantics/step";
 
@@ -42,6 +42,86 @@ describe("runtime errors", () => {
       tag: "err",
       error: { tag: "inputExhausted" }
     });
+  });
+});
+
+describe("non-loop step semantics", () => {
+  it("increments the current cell and advances pc", () => {
+    const program = parseAndValidate("+");
+    const initial = initialExecState();
+    const stepped = step(program, initial);
+
+    expect(stepped.tag).toBe("ok");
+    if (stepped.tag !== "ok") {
+      return;
+    }
+
+    expect(stepped.value.pc).toBe(1);
+    expect(readTape(stepped.value.machine.tape, stepped.value.machine.pointer)).toBe(makeCell(1));
+    expect(stepped.value.machine.pointer).toBe(initial.machine.pointer);
+  });
+
+  it("decrements zero to 255 and advances pc", () => {
+    const program = parseAndValidate("-");
+    const stepped = step(program, initialExecState());
+
+    expect(stepped.tag).toBe("ok");
+    if (stepped.tag !== "ok") {
+      return;
+    }
+
+    expect(stepped.value.pc).toBe(1);
+    expect(readTape(stepped.value.machine.tape, stepped.value.machine.pointer)).toBe(
+      makeCell(255)
+    );
+  });
+
+  it("moves the pointer right and advances pc", () => {
+    const program = parseAndValidate(">");
+    const stepped = step(program, initialExecState());
+
+    expect(stepped.tag).toBe("ok");
+    if (stepped.tag !== "ok") {
+      return;
+    }
+
+    expect(stepped.value.pc).toBe(1);
+    expect(stepped.value.machine.pointer).toBe(1);
+  });
+
+  it("appends the current cell to output and advances pc", () => {
+    const program = parseAndValidate(".");
+    const initial = initialExecState();
+    const state = {
+      machine: {
+        ...initial.machine,
+        tape: writeTape(initial.machine.tape, initial.machine.pointer, makeCell("A".charCodeAt(0)))
+      },
+      pc: 0
+    } as const;
+    const stepped = step(program, state);
+
+    expect(stepped.tag).toBe("ok");
+    if (stepped.tag !== "ok") {
+      return;
+    }
+
+    expect(stepped.value.pc).toBe(1);
+    expect(stepped.value.machine.output).toEqual([makeCell("A".charCodeAt(0))]);
+  });
+
+  it("consumes one input cell, writes it to tape, and advances pc", () => {
+    const program = parseAndValidate(",");
+    const stepped = step(program, initialExecState([makeCell(65), makeCell(66)]));
+
+    expect(stepped.tag).toBe("ok");
+    if (stepped.tag !== "ok") {
+      return;
+    }
+
+    expect(stepped.value.pc).toBe(1);
+    expect(readTape(stepped.value.machine.tape, stepped.value.machine.pointer)).toBe(makeCell(65));
+    expect(stepped.value.machine.input).toEqual([makeCell(66)]);
   });
 });
 

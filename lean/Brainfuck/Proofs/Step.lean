@@ -41,6 +41,135 @@ theorem step_on_terminated_state_is_ok (program : ValidatedProgram)
   unfold step
   simp [h]
 
+theorem step_moveRight_success (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (pointer : Pointer)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .moveRight)
+    (hmove : Pointer.moveRight state.machine.pointer = .ok pointer) :
+    step program state =
+      .ok
+        {
+          state with
+          machine := { state.machine with pointer := pointer }
+          pc := nextPc state.pc
+        } := by
+  unfold step
+  simp [hpc, hinstr, hmove]
+
+theorem step_moveRight_error (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .moveRight)
+    (hmove : Pointer.moveRight state.machine.pointer = .err .pointerOutOfBounds) :
+    step program state = .err .pointerOutOfBounds := by
+  unfold step
+  simp [hpc, hinstr, hmove]
+
+theorem step_moveLeft_success (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (pointer : Pointer)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .moveLeft)
+    (hmove : Pointer.moveLeft state.machine.pointer = .ok pointer) :
+    step program state =
+      .ok
+        {
+          state with
+          machine := { state.machine with pointer := pointer }
+          pc := nextPc state.pc
+        } := by
+  unfold step
+  simp [hpc, hinstr, hmove]
+
+theorem step_moveLeft_error (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .moveLeft)
+    (hmove : Pointer.moveLeft state.machine.pointer = .err .pointerOutOfBounds) :
+    step program state = .err .pointerOutOfBounds := by
+  unfold step
+  simp [hpc, hinstr, hmove]
+
+theorem step_increment_updates_tape_and_advances (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .increment) :
+    step program state =
+      .ok
+        {
+          state with
+          machine :=
+            { state.machine with
+              tape := Tape.mapCell state.machine.tape state.machine.pointer Cell.increment }
+          pc := nextPc state.pc
+        } := by
+  unfold step
+  simp [hpc, hinstr]
+
+theorem step_decrement_updates_tape_and_advances (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .decrement) :
+    step program state =
+      .ok
+        {
+          state with
+          machine :=
+            { state.machine with
+              tape := Tape.mapCell state.machine.tape state.machine.pointer Cell.decrement }
+          pc := nextPc state.pc
+        } := by
+  unfold step
+  simp [hpc, hinstr]
+
+theorem step_output_appends_cell_and_advances (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .output) :
+    step program state =
+      .ok
+        {
+          state with
+          machine :=
+            { state.machine with
+              output :=
+                state.machine.output ++
+                  [Tape.read state.machine.tape state.machine.pointer] }
+          pc := nextPc state.pc
+        } := by
+  unfold step
+  simp [hpc, hinstr]
+
+theorem step_input_empty_is_error (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .input)
+    (hinput : state.machine.input = []) :
+    step program state = .err .inputExhausted := by
+  unfold step
+  simp [hpc, hinstr, hinput]
+
+theorem step_input_consumes_head_and_advances (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (hpc : state.pc.val < program.length)
+    (cell : Cell)
+    (rest : List Cell)
+    (hinstr : program.instructions.get ⟨state.pc.val, hpc⟩ = .input)
+    (hinput : state.machine.input = cell :: rest) :
+    step program state =
+      .ok
+        {
+          state with
+          machine :=
+            { state.machine with
+              tape := Tape.write state.machine.tape state.machine.pointer cell
+              input := rest }
+          pc := nextPc state.pc
+        } := by
+  unfold step
+  simp [hpc, hinstr, hinput]
+
 theorem step_jumpIfZero_zero_uses_target (program : ValidatedProgram)
     (state : ExecState program.length)
     (hpc : state.pc.val < program.length)
