@@ -156,4 +156,30 @@ describe("runSlice semantics", () => {
 
     expect(finished.value.done).toBe(finished.value.state.pc === finishedProgram.length);
   });
+
+  it("returns the same state as runFuel for the same budget", () => {
+    const partialProgram = parseAndValidate("++");
+    const partialSlice = runSlice(partialProgram, initialExecState(), 1);
+    const partialFuel = runFuel(partialProgram, 1, initialExecState());
+
+    expect(partialSlice.tag).toBe("ok");
+    expect(partialFuel.tag).toBe("ok");
+    if (partialSlice.tag !== "ok" || partialFuel.tag !== "ok") {
+      return;
+    }
+
+    expect(partialSlice.value.state).toEqual(partialFuel.value);
+
+    const finishedProgram = parseAndValidate("+");
+    const finishedSlice = runSlice(finishedProgram, initialExecState(), 10);
+    const finishedFuel = runFuel(finishedProgram, 10, initialExecState());
+
+    expect(finishedSlice.tag).toBe("ok");
+    expect(finishedFuel.tag).toBe("ok");
+    if (finishedSlice.tag !== "ok" || finishedFuel.tag !== "ok") {
+      return;
+    }
+
+    expect(finishedSlice.value.state).toEqual(finishedFuel.value);
+  });
 });
