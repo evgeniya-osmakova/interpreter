@@ -42,6 +42,7 @@ npm run dev
 - `lean/` builds cleanly with `lake build`
 - `web/` passes `npm test`
 - `web/` builds with `npm run build`
+- `make check` validates the whole repository from the root
 - the Lean model includes an end-to-end `Hello World` proof artifact
 - the TS engine correctly runs the canonical Brainfuck `Hello World`
 - browser execution is non-blocking via `Web Worker` plus chunked `runSlice`
@@ -141,6 +142,7 @@ This is a better starting tradeoff than exposing raw `number[]`:
 
 ```text
 .
+├── Makefile
 ├── README.md
 ├── AGENTS.md
 ├── docs/
@@ -218,11 +220,12 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │       └── status-view.ts
     └── tests/
         ├── budget.test.ts
+        ├── client.test.ts
         ├── eval.test.ts
         ├── hello-world.test.ts
         ├── runtime.test.ts
         ├── step.test.ts
         ├── ui.test.ts
-        └── validation.test.ts
+        ├── validation.test.ts
         └── worker-protocol.test.ts
 ```

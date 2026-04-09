@@ -8,10 +8,13 @@ export interface RuntimeClient {
   dispose: () => void;
 }
 
-export const createWorkerRuntimeClient = (): RuntimeClient => {
-  const worker = new Worker(new URL("./runner.worker.ts", import.meta.url), {
-    type: "module"
-  });
+export interface WorkerEndpoint {
+  onmessage: ((message: MessageEvent<unknown>) => void) | null;
+  postMessage: (message: unknown) => void;
+  terminate: () => void;
+}
+
+export const bindRuntimeClient = (worker: WorkerEndpoint): RuntimeClient => {
   const listeners = new Set<RuntimeEventHandler>();
 
   worker.onmessage = (message: MessageEvent<unknown>): void => {
@@ -42,3 +45,10 @@ export const createWorkerRuntimeClient = (): RuntimeClient => {
     }
   };
 };
+
+export const createWorkerRuntimeClient = (): RuntimeClient =>
+  bindRuntimeClient(
+    new Worker(new URL("./runner.worker.ts", import.meta.url), {
+      type: "module"
+    })
+  );
