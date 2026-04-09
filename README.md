@@ -60,8 +60,8 @@ The browser shell never executes the interpreter on the main thread.
 - The async driver lives under `web/src/runtime/`.
 - `runner.worker.ts` hosts a `Web Worker`.
 - The worker runs the pure engine in bounded slices via `runSlice`.
-- After each slice it emits a serializable progress snapshot.
-- The UI only renders those snapshots and sends `run` / `stop` requests.
+- After each slice it emits a serializable progress snapshot plus output bytes.
+- The UI only renders those protocol payloads and sends `run` / `stop` requests.
 
 This is better than timers on the main thread because non-terminating or long-running programs cannot freeze the UI thread.
 

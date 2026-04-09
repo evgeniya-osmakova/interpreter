@@ -140,8 +140,8 @@ describe("browser UI shell", () => {
 
     client.emit({
       tag: "progress",
-      state,
       snapshot: createMachineSnapshot(state),
+      output: [65],
       done: true,
       stepsExecuted: 2
     });
@@ -168,8 +168,8 @@ describe("browser UI shell", () => {
     appHandle = mountApp(root, client);
     client.emit({
       tag: "progress",
-      state,
       snapshot: createMachineSnapshot(state),
+      output: [65],
       done: false,
       stepsExecuted: 2
     });

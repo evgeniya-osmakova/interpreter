@@ -8,8 +8,8 @@ import { renderInspectorView } from "./inspector-view";
 import { renderOutputView } from "./output-view";
 import { renderStatusView } from "./status-view";
 
-const bytesToText = (bytes: readonly Cell[]): string =>
-  bytes.map((byte) => String.fromCharCode(byte as number)).join("");
+const bytesToText = (bytes: readonly number[]): string =>
+  bytes.map((byte) => String.fromCharCode(byte)).join("");
 
 const textToCells = (text: string): readonly Cell[] =>
   Array.from(text, (char) => makeCell(char.charCodeAt(0)));
@@ -87,10 +87,7 @@ export const mountApp = (
           `PC ${event.snapshot.pc} · Pointer ${event.snapshot.pointer} · Steps ${totalSteps}`
         );
         inspector.setSnapshot(event.snapshot);
-        output.setOutput(
-          bytesToText(event.state.machine.output),
-          event.state.machine.output.map((byte) => byte as number)
-        );
+        output.setOutput(bytesToText(event.output), event.output);
         break;
     }
   });

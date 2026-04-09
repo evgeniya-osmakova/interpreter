@@ -69,8 +69,8 @@ export const createRunner = (deps: RunnerDeps) => {
 
       deps.emit({
         tag: "progress",
-        state: current,
         snapshot: createMachineSnapshot(current),
+        output: current.machine.output.map((byte) => byte as number),
         done: slice.value.done,
         stepsExecuted: slice.value.stepsExecuted
       });
