@@ -1,7 +1,9 @@
 import type { Cell } from "./cell";
+import type { ProgramCounter } from "./program-counter";
 import type { Pointer } from "./pointer";
 import { blankTape, type Tape } from "./tape";
 import { zeroPointer } from "./pointer";
+import { zeroProgramCounter } from "./program-counter";
 
 export interface MachineState {
   readonly tape: Tape;
@@ -12,7 +14,7 @@ export interface MachineState {
 
 export interface ExecState {
   readonly machine: MachineState;
-  readonly pc: number;
+  readonly pc: ProgramCounter;
 }
 
 export const initialMachineState = (input: readonly Cell[] = []): MachineState => ({
@@ -24,5 +26,5 @@ export const initialMachineState = (input: readonly Cell[] = []): MachineState =
 
 export const initialExecState = (input: readonly Cell[] = []): ExecState => ({
   machine: initialMachineState(input),
-  pc: 0
+  pc: zeroProgramCounter()
 });

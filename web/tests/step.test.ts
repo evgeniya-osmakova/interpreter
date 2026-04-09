@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeCell } from "../src/brainfuck/core/cell";
+import { makeProgramCounter } from "../src/brainfuck/core/program-counter";
 import { parse } from "../src/brainfuck/program/parse";
 import { validate } from "../src/brainfuck/program/validate";
 import { initialExecState } from "../src/brainfuck/core/state";
@@ -92,12 +93,17 @@ describe("non-loop step semantics", () => {
   it("appends the current cell to output and advances pc", () => {
     const program = parseAndValidate(".");
     const initial = initialExecState();
+    const pc = makeProgramCounter(0, program.length);
+    expect(pc).not.toBeNull();
+    if (pc === null) {
+      return;
+    }
     const state = {
       machine: {
         ...initial.machine,
         tape: writeTape(initial.machine.tape, initial.machine.pointer, makeCell("A".charCodeAt(0)))
       },
-      pc: 0
+      pc
     } as const;
     const stepped = step(program, state);
 
@@ -143,12 +149,17 @@ describe("loop step semantics", () => {
   it("jumps back to the matching loop start when the current cell is non-zero at loop end", () => {
     const program = parseAndValidate("[]");
     const baseState = initialExecState();
+    const pc = makeProgramCounter(1, program.length);
+    expect(pc).not.toBeNull();
+    if (pc === null) {
+      return;
+    }
     const state = {
       machine: {
         ...baseState.machine,
         tape: writeTape(baseState.machine.tape, baseState.machine.pointer, makeCell(1))
       },
-      pc: 1
+      pc
     } as const;
     const stepped = step(program, state);
 

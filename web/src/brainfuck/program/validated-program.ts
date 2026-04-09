@@ -1,3 +1,4 @@
+import type { ProgramCounter } from "../core/program-counter";
 import type { ValidationError } from "../core/error";
 import { err, ok, type Result } from "../core/result";
 
@@ -29,8 +30,8 @@ export const makeValidatedProgram = (
 
 export const getValidatedInstruction = (
   program: ValidatedProgram,
-  pc: number
-): ValidatedInstruction => program.instructions[pc] as ValidatedInstruction;
+  pc: ProgramCounter
+): ValidatedInstruction => program.instructions[pc as number] as ValidatedInstruction;
 
 export const makeJumpTarget = (
   value: number,

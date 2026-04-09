@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeCell } from "../src/brainfuck/core/cell";
+import { makeProgramCounter } from "../src/brainfuck/core/program-counter";
 import { initialExecState } from "../src/brainfuck/core/state";
 import { parse } from "../src/brainfuck/program/parse";
 import { validate } from "../src/brainfuck/program/validate";
@@ -36,9 +37,14 @@ describe("eval semantics", () => {
 
   it("runFuel on a terminated state returns the same state for any fuel", () => {
     const program = parseAndValidate("+");
+    const terminatedPc = makeProgramCounter(1, program.length);
+    expect(terminatedPc).not.toBeNull();
+    if (terminatedPc === null) {
+      return;
+    }
     const terminated = {
       machine: initialExecState().machine,
-      pc: 1
+      pc: terminatedPc
     } as const;
     const result = runFuel(program, 100, terminated);
 
@@ -91,9 +97,14 @@ describe("runSlice semantics", () => {
 
   it("reports done for an already terminated state even with zero executed steps", () => {
     const program = parseAndValidate("+");
+    const terminatedPc = makeProgramCounter(1, program.length);
+    expect(terminatedPc).not.toBeNull();
+    if (terminatedPc === null) {
+      return;
+    }
     const terminated = {
       machine: initialExecState().machine,
-      pc: 1
+      pc: terminatedPc
     } as const;
     const result = runSlice(program, terminated, 10);
 

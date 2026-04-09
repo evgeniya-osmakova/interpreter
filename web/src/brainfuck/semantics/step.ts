@@ -1,3 +1,8 @@
+import {
+  isProgramCounterTerminated,
+  nextProgramCounter,
+  programCounterFromJumpTarget
+} from "../core/program-counter";
 import type { RuntimeError } from "../core/error";
 import { movePointerLeft, movePointerRight } from "../core/pointer";
 import { err, ok, type Result } from "../core/result";
@@ -6,10 +11,7 @@ import { decrementTapeCell, incrementTapeCell, readTape, writeTape } from "../co
 import { getValidatedInstruction, type ValidatedProgram } from "../program/validated-program";
 
 export const isTerminated = (program: ValidatedProgram, state: ExecState): boolean =>
-  state.pc >= program.length;
-
-const nextPc = (program: ValidatedProgram, pc: number): number =>
-  Math.min(pc + 1, program.length);
+  isProgramCounterTerminated(program, state.pc);
 
 export const step = (
   program: ValidatedProgram,
@@ -27,7 +29,7 @@ export const step = (
       return pointer.tag === "ok"
         ? ok({
             machine: { ...state.machine, pointer: pointer.value },
-            pc: nextPc(program, state.pc)
+            pc: nextProgramCounter(program, state.pc)
           })
         : err(pointer.error);
     }
@@ -36,7 +38,7 @@ export const step = (
       return pointer.tag === "ok"
         ? ok({
             machine: { ...state.machine, pointer: pointer.value },
-            pc: nextPc(program, state.pc)
+            pc: nextProgramCounter(program, state.pc)
           })
         : err(pointer.error);
     }
@@ -46,7 +48,7 @@ export const step = (
           ...state.machine,
           tape: incrementTapeCell(state.machine.tape, state.machine.pointer)
         },
-        pc: nextPc(program, state.pc)
+        pc: nextProgramCounter(program, state.pc)
       });
     case "decrement":
       return ok({
@@ -54,7 +56,7 @@ export const step = (
           ...state.machine,
           tape: decrementTapeCell(state.machine.tape, state.machine.pointer)
         },
-        pc: nextPc(program, state.pc)
+        pc: nextProgramCounter(program, state.pc)
       });
     case "output": {
       const cell = readTape(state.machine.tape, state.machine.pointer);
@@ -63,7 +65,7 @@ export const step = (
           ...state.machine,
           output: [...state.machine.output, cell]
         },
-        pc: nextPc(program, state.pc)
+        pc: nextProgramCounter(program, state.pc)
       });
     }
     case "input": {
@@ -78,21 +80,27 @@ export const step = (
           tape: writeTape(state.machine.tape, state.machine.pointer, head),
           input: tail
         },
-        pc: nextPc(program, state.pc)
+        pc: nextProgramCounter(program, state.pc)
       });
     }
     case "jumpIfZero": {
       const cell = readTape(state.machine.tape, state.machine.pointer);
       return ok({
         machine: state.machine,
-        pc: (cell as number) === 0 ? (instruction.target as number) : nextPc(program, state.pc)
+        pc:
+          (cell as number) === 0
+            ? programCounterFromJumpTarget(instruction.target)
+            : nextProgramCounter(program, state.pc)
       });
     }
     case "jumpIfNonZero": {
       const cell = readTape(state.machine.tape, state.machine.pointer);
       return ok({
         machine: state.machine,
-        pc: (cell as number) === 0 ? nextPc(program, state.pc) : (instruction.target as number)
+        pc:
+          (cell as number) === 0
+            ? nextProgramCounter(program, state.pc)
+            : programCounterFromJumpTarget(instruction.target)
       });
     }
   }

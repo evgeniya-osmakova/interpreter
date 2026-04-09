@@ -44,7 +44,7 @@ npm run dev
 | Concept | Lean | TypeScript |
 | --- | --- | --- |
 | Result | `Brainfuck.Core.Result` | `brainfuck/core/result.ts` |
-| Tape and cells | `Cell`, `Tape`, `Pointer` | `cell.ts`, `tape.ts`, `pointer.ts` |
+| Tape and control domain | `Cell`, `Tape`, `Pointer`, `ProgramCounter` | `cell.ts`, `tape.ts`, `pointer.ts`, `program-counter.ts` |
 | Raw program | `RawProgram` | `raw-program.ts` |
 | Validated program | `ValidatedProgram` | `validated-program.ts` |
 | Validation | `Program.Validate` | `program/validate.ts` |
@@ -103,6 +103,7 @@ Why this is the best tradeoff:
 - In Lean, program length is part of the type of both instructions and execution state, which makes step semantics and later proofs more direct.
 - In TypeScript, the same shape mirrors naturally using a branded `JumpTarget` number produced only by validation.
 - In TypeScript, `makeValidatedProgram` derives `length` from the validated instruction array, so the normal construction path cannot drift into a mismatched `length`/`instructions` pair.
+- In TypeScript, `ExecState.pc` is now a branded `ProgramCounter`, so control state is no longer a raw `number` on the normal path.
 - In both phases, `runFuel` is now just the state projection of `runSlice`, so bounded evaluation has one canonical implementation path instead of two parallel ones.
 - This is better than evaluating raw `[` and `]` tokens directly because the PDF requires bracket matching before execution.
 - This is better than storing a separate external jump map because the target is carried by the validated instruction itself, so the mirrored structure stays local and explicit in both phases.

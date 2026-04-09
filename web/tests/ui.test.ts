@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { makeCell } from "../src/brainfuck/core/cell";
+import { makeProgramCounter } from "../src/brainfuck/core/program-counter";
 import { initialExecState, type ExecState } from "../src/brainfuck/core/state";
 import { writeTape } from "../src/brainfuck/core/tape";
 import { createMachineSnapshot } from "../src/runtime/snapshot";
@@ -49,8 +50,12 @@ const getMetricValues = (root: HTMLElement): Record<string, string> => {
 
 const createProgressState = (): ExecState => {
   const initial = initialExecState([]);
+  const pc = makeProgramCounter(2, 2);
+  if (pc === null) {
+    throw new Error("failed to construct progress-state pc");
+  }
   return {
-    pc: 2,
+    pc,
     machine: {
       ...initial.machine,
       tape: writeTape(initial.machine.tape, initial.machine.pointer, makeCell(65)),
