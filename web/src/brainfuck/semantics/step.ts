@@ -1,7 +1,6 @@
 import {
   isProgramCounterTerminated,
-  nextProgramCounter,
-  programCounterFromJumpTarget
+  nextProgramCounter
 } from "../core/program-counter";
 import type { RuntimeError } from "../core/error";
 import { movePointerLeft, movePointerRight } from "../core/pointer";
@@ -88,9 +87,7 @@ export const step = (
       return ok({
         machine: state.machine,
         pc:
-          (cell as number) === 0
-            ? programCounterFromJumpTarget(instruction.target)
-            : nextProgramCounter(program, state.pc)
+          (cell as number) === 0 ? instruction.target : nextProgramCounter(program, state.pc)
       });
     }
     case "jumpIfNonZero": {
@@ -100,7 +97,7 @@ export const step = (
         pc:
           (cell as number) === 0
             ? nextProgramCounter(program, state.pc)
-            : programCounterFromJumpTarget(instruction.target)
+            : instruction.target
       });
     }
   }

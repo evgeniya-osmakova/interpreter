@@ -1,11 +1,11 @@
+import type { ProgramCounter } from "../core/program-counter";
 import type { ValidationError } from "../core/error";
 import { err, ok, type Result } from "../core/result";
 import type { InstructionToken } from "../core/instruction";
 import type { RawProgram } from "./raw-program";
 import {
-  makeJumpTarget,
+  makeValidatedTarget,
   makeValidatedProgram,
-  type JumpTarget,
   type ValidatedInstruction,
   type ValidatedProgram
 } from "./validated-program";
@@ -48,17 +48,17 @@ const resolveTarget = (
   sourceIndex: number,
   length: number,
   offset = 0
-): Result<JumpTarget, ValidationError> => {
+): Result<ProgramCounter, ValidationError> => {
   const target = jumps.get(sourceIndex);
   if (target === undefined) {
-    return err<JumpTarget, ValidationError>({
+    return err<ProgramCounter, ValidationError>({
       tag: "invalidJumpTarget",
       index: sourceIndex,
       target: -1
     });
   }
 
-  return makeJumpTarget(target + offset, length, sourceIndex);
+  return makeValidatedTarget(target + offset, length, sourceIndex);
 };
 
 const tokenToValidatedInstruction = (

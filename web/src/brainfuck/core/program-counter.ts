@@ -1,5 +1,3 @@
-import type { JumpTarget } from "../program/validated-program";
-
 declare const programCounterBrand: unique symbol;
 
 export type ProgramCounter = number & { readonly [programCounterBrand]: "ProgramCounter" };
@@ -25,8 +23,5 @@ export const isProgramCounterTerminated = (
   program: { readonly length: number },
   pc: ProgramCounter
 ): boolean => (pc as number) >= program.length;
-
-export const programCounterFromJumpTarget = (target: JumpTarget): ProgramCounter =>
-  brandProgramCounter(target as number);
 
 export const programCounterValue = (pc: ProgramCounter): number => pc as number;

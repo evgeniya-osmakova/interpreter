@@ -1,10 +1,6 @@
-import type { ProgramCounter } from "../core/program-counter";
 import type { ValidationError } from "../core/error";
 import { err, ok, type Result } from "../core/result";
-
-declare const jumpTargetBrand: unique symbol;
-
-export type JumpTarget = number & { readonly [jumpTargetBrand]: "JumpTarget" };
+import type { ProgramCounter } from "../core/program-counter";
 
 export type ValidatedInstruction =
   | { readonly tag: "moveRight" }
@@ -13,8 +9,8 @@ export type ValidatedInstruction =
   | { readonly tag: "decrement" }
   | { readonly tag: "output" }
   | { readonly tag: "input" }
-  | { readonly tag: "jumpIfZero"; readonly target: JumpTarget }
-  | { readonly tag: "jumpIfNonZero"; readonly target: JumpTarget };
+  | { readonly tag: "jumpIfZero"; readonly target: ProgramCounter }
+  | { readonly tag: "jumpIfNonZero"; readonly target: ProgramCounter };
 
 export interface ValidatedProgram {
   readonly length: number;
@@ -33,14 +29,14 @@ export const getValidatedInstruction = (
   pc: ProgramCounter
 ): ValidatedInstruction => program.instructions[pc as number] as ValidatedInstruction;
 
-export const makeJumpTarget = (
+export const makeValidatedTarget = (
   value: number,
   length: number,
   sourceIndex: number
-): Result<JumpTarget, ValidationError> =>
+): Result<ProgramCounter, ValidationError> =>
   value >= 0 && value <= length
-    ? ok<JumpTarget, ValidationError>(value as JumpTarget)
-    : err<JumpTarget, ValidationError>({
+    ? ok<ProgramCounter, ValidationError>(value as ProgramCounter)
+    : err<ProgramCounter, ValidationError>({
         tag: "invalidJumpTarget",
         index: sourceIndex,
         target: value

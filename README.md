@@ -101,7 +101,7 @@ Why this is the best tradeoff:
 - In Lean, jump targets are in-bounds by construction, so `step` does not need extra runtime target checks or proof plumbing around invalid indices.
 - In Lean, `jumpIfZero` can jump directly to normal termination when the matching `]` is the final instruction, which is a more exact operational model than storing only a bracket index.
 - In Lean, program length is part of the type of both instructions and execution state, which makes step semantics and later proofs more direct.
-- In TypeScript, the same shape mirrors naturally using a branded `JumpTarget` number produced only by validation.
+- In TypeScript, loop instruction targets now use the same branded `ProgramCounter` domain type as `ExecState.pc`, matching Lean more closely than a separate jump-target brand.
 - In TypeScript, `makeValidatedProgram` derives `length` from the validated instruction array, so the normal construction path cannot drift into a mismatched `length`/`instructions` pair.
 - In TypeScript, `ExecState.pc` is now a branded `ProgramCounter`, so control state is no longer a raw `number` on the normal path.
 - In both phases, `runFuel` is now just the state projection of `runSlice`, so bounded evaluation has one canonical implementation path instead of two parallel ones.
