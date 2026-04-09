@@ -1,15 +1,12 @@
 import type { Cell } from "../brainfuck/core/cell";
 import { makeCell } from "../brainfuck/core/cell";
+import { createWorkerRuntimeClient, type RuntimeClient } from "../runtime/client";
 import type { MachineSnapshot, WorkerEvent, WorkerRequest } from "../runtime/worker-protocol";
 import { renderControls } from "./controls";
 import { PROGRAM_EXAMPLES } from "./examples";
 import { renderInspectorView } from "./inspector-view";
 import { renderOutputView } from "./output-view";
 import { renderStatusView } from "./status-view";
-
-const worker = new Worker(new URL("../runtime/runner.worker.ts", import.meta.url), {
-  type: "module"
-});
 
 const bytesToText = (bytes: readonly Cell[]): string =>
   bytes.map((byte) => String.fromCharCode(byte as number)).join("");
@@ -35,7 +32,16 @@ const createInitialSnapshot = (inputLength: number): MachineSnapshot => ({
   }))
 });
 
-export const mountApp = (root: HTMLElement): void => {
+export interface AppHandle {
+  dispose: () => void;
+}
+
+export const mountApp = (
+  root: HTMLElement,
+  runtimeClient: RuntimeClient = createWorkerRuntimeClient()
+): AppHandle => {
+  root.replaceChildren();
+
   const title = document.createElement("h1");
   title.textContent = "Brainfuck Mirror";
 
@@ -62,32 +68,32 @@ export const mountApp = (root: HTMLElement): void => {
     output.element
   );
 
-  worker.onmessage = (message: MessageEvent<WorkerEvent>): void => {
-    switch (message.data.tag) {
+  const unsubscribe = runtimeClient.subscribe((event: WorkerEvent): void => {
+    switch (event.tag) {
       case "validationError":
-        status.setStatus("Validation error", message.data.error.tag);
+        status.setStatus("Validation error", event.error.tag);
         break;
       case "runtimeError":
-        status.setStatus("Runtime error", message.data.error.tag);
+        status.setStatus("Runtime error", event.error.tag);
         break;
       case "stopped":
         status.setStatus(resetRequested ? "Reset" : "Stopped");
         resetRequested = false;
         break;
       case "progress":
-        totalSteps += message.data.stepsExecuted;
+        totalSteps += event.stepsExecuted;
         status.setStatus(
-          message.data.done ? "Finished" : "Running",
-          `PC ${message.data.snapshot.pc} · Pointer ${message.data.snapshot.pointer} · Steps ${totalSteps}`
+          event.done ? "Finished" : "Running",
+          `PC ${event.snapshot.pc} · Pointer ${event.snapshot.pointer} · Steps ${totalSteps}`
         );
-        inspector.setSnapshot(message.data.snapshot);
+        inspector.setSnapshot(event.snapshot);
         output.setOutput(
-          bytesToText(message.data.state.machine.output),
-          message.data.state.machine.output.map((byte) => byte as number)
+          bytesToText(event.state.machine.output),
+          event.state.machine.output.map((byte) => byte as number)
         );
         break;
     }
-  };
+  });
 
   controls.run.addEventListener("click", () => {
     totalSteps = 0;
@@ -102,11 +108,11 @@ export const mountApp = (root: HTMLElement): void => {
       budget: readBudget(controls.budget.value)
     };
     status.setStatus("Starting", "Worker request dispatched");
-    worker.postMessage(request);
+    runtimeClient.send(request);
   });
 
   controls.stop.addEventListener("click", () => {
-    worker.postMessage({ tag: "stop" } satisfies WorkerRequest);
+    runtimeClient.send({ tag: "stop" } satisfies WorkerRequest);
   });
 
   controls.reset.addEventListener("click", () => {
@@ -115,7 +121,7 @@ export const mountApp = (root: HTMLElement): void => {
     output.setOutput("", []);
     inspector.setSnapshot(createInitialSnapshot(textToCells(controls.input.value).length));
     status.setStatus("Reset", "State cleared in UI");
-    worker.postMessage({ tag: "stop" } satisfies WorkerRequest);
+    runtimeClient.send({ tag: "stop" } satisfies WorkerRequest);
   });
 
   controls.examples.addEventListener("click", (event) => {
@@ -137,4 +143,12 @@ export const mountApp = (root: HTMLElement): void => {
   inspector.setSnapshot(createInitialSnapshot(0));
   output.setOutput("", []);
   status.setStatus("Idle", "Ready to validate and run a Brainfuck program");
+
+  return {
+    dispose() {
+      unsubscribe();
+      runtimeClient.dispose();
+      root.replaceChildren();
+    }
+  };
 };
