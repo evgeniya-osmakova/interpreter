@@ -49,7 +49,7 @@ npm run dev
 | Validated program | `ValidatedProgram` | `validated-program.ts` |
 | Validation | `Program.Validate` | `program/validate.ts` |
 | Single-step semantics | `Semantics.step` | `semantics/step.ts` |
-| Bounded evaluation | `Semantics.runFuel` | `semantics/eval.ts`, `run-slice.ts` |
+| Bounded evaluation | `Semantics.runFuel`, `Semantics.runSlice` | `semantics/eval.ts`, `run-slice.ts` |
 | Async browser driver | n/a | `runtime/runner.ts`, `runner.worker.ts` |
 
 ## Browser Execution Model

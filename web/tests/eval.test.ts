@@ -89,6 +89,24 @@ describe("runSlice semantics", () => {
     });
   });
 
+  it("reports done for an already terminated state even with zero executed steps", () => {
+    const program = parseAndValidate("+");
+    const terminated = {
+      machine: initialExecState().machine,
+      pc: 1
+    } as const;
+    const result = runSlice(program, terminated, 10);
+
+    expect(result).toEqual({
+      tag: "ok",
+      value: {
+        state: terminated,
+        stepsExecuted: 0,
+        done: true
+      }
+    });
+  });
+
   it("executes at most the requested budget", () => {
     const program = parseAndValidate("++");
     const result = runSlice(program, initialExecState(), 1);
