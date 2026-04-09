@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { createRunner } from "./runner";
-import type { WorkerEvent, WorkerRequest } from "./worker-protocol";
+import { decodeWorkerRequest, type WorkerEvent } from "./worker-protocol";
 
 const runner = createRunner({
   emit(event: WorkerEvent): void {
@@ -9,6 +9,12 @@ const runner = createRunner({
   }
 });
 
-self.onmessage = (message: MessageEvent<WorkerRequest>): void => {
-  void runner.handleRequest(message.data);
+self.onmessage = (message: MessageEvent<unknown>): void => {
+  const decoded = decodeWorkerRequest(message.data);
+  if (decoded.tag === "err") {
+    self.postMessage({ tag: "protocolError", error: decoded.error } satisfies WorkerEvent);
+    return;
+  }
+
+  void runner.handleRequest(decoded.value);
 };

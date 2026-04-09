@@ -247,6 +247,13 @@ describe("browser UI shell", () => {
     });
     expect(root.querySelector(".status__label")?.textContent).toBe("Runtime error");
     expect(root.querySelector(".status__detail")?.textContent).toBe("pointerOutOfBounds");
+
+    client.emit({
+      tag: "protocolError",
+      error: { tag: "invalidRequest", detail: "expected a request object" }
+    });
+    expect(root.querySelector(".status__label")?.textContent).toBe("Protocol error");
+    expect(root.querySelector(".status__detail")?.textContent).toBe("invalidRequest");
   });
 
   it("distinguishes stop from reset and disposes the runtime client", () => {

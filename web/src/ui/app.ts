@@ -64,6 +64,9 @@ export const mountApp = (
       case "runtimeError":
         status.setStatus("Runtime error", event.error.tag);
         break;
+      case "protocolError":
+        status.setStatus("Protocol error", event.error.tag);
+        break;
       case "stopped":
         status.setStatus(resetRequested ? "Reset" : "Stopped");
         resetRequested = false;
