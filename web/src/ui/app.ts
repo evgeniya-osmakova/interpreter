@@ -1,7 +1,8 @@
 import type { Cell } from "../brainfuck/core/cell";
 import { makeCell } from "../brainfuck/core/cell";
-import type { WorkerEvent, WorkerRequest } from "../runtime/worker-protocol";
+import type { MachineSnapshot, WorkerEvent, WorkerRequest } from "../runtime/worker-protocol";
 import { renderControls } from "./controls";
+import { renderInspectorView } from "./inspector-view";
 import { renderOutputView } from "./output-view";
 import { renderStatusView } from "./status-view";
 
@@ -15,6 +16,19 @@ const bytesToText = (bytes: readonly Cell[]): string =>
 const textToCells = (text: string): readonly Cell[] =>
   Array.from(text, (char) => makeCell(char.charCodeAt(0)));
 
+const createInitialSnapshot = (inputLength: number): MachineSnapshot => ({
+  pc: 0,
+  pointer: 0,
+  currentCell: 0,
+  inputLength,
+  outputLength: 0,
+  tapeWindow: Array.from({ length: 5 }, (_, offset) => ({
+    index: offset,
+    value: 0,
+    isPointer: offset === 0
+  }))
+});
+
 export const mountApp = (root: HTMLElement): void => {
   const title = document.createElement("h1");
   title.textContent = "Brainfuck Mirror";
@@ -22,43 +36,77 @@ export const mountApp = (root: HTMLElement): void => {
   const controls = renderControls();
   const output = renderOutputView();
   const status = renderStatusView();
+  const inspector = renderInspectorView();
+  let totalSteps = 0;
+  let resetRequested = false;
 
   const actions = document.createElement("div");
   actions.className = "actions";
-  actions.append(controls.run, controls.stop);
+  actions.append(controls.run, controls.stop, controls.reset);
 
-  root.append(title, controls.source, controls.input, actions, status.element, output.element);
+  root.append(
+    title,
+    controls.source,
+    controls.input,
+    actions,
+    status.element,
+    inspector.element,
+    output.element
+  );
 
   worker.onmessage = (message: MessageEvent<WorkerEvent>): void => {
     switch (message.data.tag) {
       case "validationError":
-        status.setStatus(`Validation error: ${message.data.error.tag}`);
+        status.setStatus("Validation error", message.data.error.tag);
         break;
       case "runtimeError":
-        status.setStatus(`Runtime error: ${message.data.error.tag}`);
+        status.setStatus("Runtime error", message.data.error.tag);
         break;
       case "stopped":
-        status.setStatus("Stopped");
+        status.setStatus(resetRequested ? "Reset" : "Stopped");
+        resetRequested = false;
         break;
       case "progress":
-        status.setStatus(message.data.done ? "Finished" : "Running");
+        totalSteps += message.data.stepsExecuted;
+        status.setStatus(
+          message.data.done ? "Finished" : "Running",
+          `PC ${message.data.snapshot.pc} · Pointer ${message.data.snapshot.pointer} · Steps ${totalSteps}`
+        );
+        inspector.setSnapshot(message.data.snapshot);
         output.setOutput(bytesToText(message.data.state.machine.output));
         break;
     }
   };
 
   controls.run.addEventListener("click", () => {
+    totalSteps = 0;
+    resetRequested = false;
+    output.setOutput("");
+    inspector.setSnapshot(createInitialSnapshot(textToCells(controls.input.value).length));
+
     const request: WorkerRequest = {
       tag: "run",
       source: controls.source.value,
       input: textToCells(controls.input.value),
       budget: 1000
     };
-    status.setStatus("Starting");
+    status.setStatus("Starting", "Worker request dispatched");
     worker.postMessage(request);
   });
 
   controls.stop.addEventListener("click", () => {
     worker.postMessage({ tag: "stop" } satisfies WorkerRequest);
   });
+
+  controls.reset.addEventListener("click", () => {
+    resetRequested = true;
+    totalSteps = 0;
+    output.setOutput("");
+    inspector.setSnapshot(createInitialSnapshot(textToCells(controls.input.value).length));
+    status.setStatus("Reset", "State cleared in UI");
+    worker.postMessage({ tag: "stop" } satisfies WorkerRequest);
+  });
+
+  inspector.setSnapshot(createInitialSnapshot(0));
+  status.setStatus("Idle", "Ready to validate and run a Brainfuck program");
 };

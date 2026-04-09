@@ -1,4 +1,5 @@
 import type { Cell } from "../brainfuck/core/cell";
+import type { TapeWindowCell } from "../brainfuck/core/tape";
 import type { RuntimeError, ValidationError } from "../brainfuck/core/error";
 import type { ExecState } from "../brainfuck/core/state";
 
@@ -6,8 +7,23 @@ export type WorkerRequest =
   | { readonly tag: "run"; readonly source: string; readonly input: readonly Cell[]; readonly budget: number }
   | { readonly tag: "stop" };
 
+export interface MachineSnapshot {
+  readonly pc: number;
+  readonly pointer: number;
+  readonly currentCell: number;
+  readonly inputLength: number;
+  readonly outputLength: number;
+  readonly tapeWindow: readonly TapeWindowCell[];
+}
+
 export type WorkerEvent =
   | { readonly tag: "validationError"; readonly error: ValidationError }
   | { readonly tag: "runtimeError"; readonly error: RuntimeError }
-  | { readonly tag: "progress"; readonly state: ExecState; readonly done: boolean; readonly stepsExecuted: number }
+  | {
+      readonly tag: "progress";
+      readonly state: ExecState;
+      readonly snapshot: MachineSnapshot;
+      readonly done: boolean;
+      readonly stepsExecuted: number;
+    }
   | { readonly tag: "stopped" };

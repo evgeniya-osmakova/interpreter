@@ -34,3 +34,30 @@ export const incrementTapeCell = (tape: Tape, pointer: Pointer): Tape =>
 
 export const decrementTapeCell = (tape: Tape, pointer: Pointer): Tape =>
   mapTapeCell(tape, pointer, decrementCell);
+
+export interface TapeWindowCell {
+  readonly index: number;
+  readonly value: number;
+  readonly isPointer: boolean;
+}
+
+export const inspectTapeWindow = (
+  tape: Tape,
+  pointer: Pointer,
+  radius: number
+): readonly TapeWindowCell[] => {
+  const center = pointer as number;
+  const start = Math.max(0, center - radius);
+  const end = Math.min(29999, center + radius);
+  const cells: TapeWindowCell[] = [];
+
+  for (let index = start; index <= end; index += 1) {
+    cells.push({
+      index,
+      value: tape[bufferKey][index] ?? 0,
+      isPointer: index === center
+    });
+  }
+
+  return cells;
+};

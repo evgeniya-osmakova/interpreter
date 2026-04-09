@@ -2,6 +2,7 @@ import { initialExecState } from "../brainfuck/core/state";
 import { parse } from "../brainfuck/program/parse";
 import { validate } from "../brainfuck/program/validate";
 import { runSlice } from "../brainfuck/semantics/run-slice";
+import { createMachineSnapshot } from "./snapshot";
 import type { WorkerEvent, WorkerRequest } from "./worker-protocol";
 
 export interface RunnerDeps {
@@ -60,6 +61,7 @@ export const createRunner = (deps: RunnerDeps) => {
       deps.emit({
         tag: "progress",
         state: current,
+        snapshot: createMachineSnapshot(current),
         done: slice.value.done,
         stepsExecuted: slice.value.stepsExecuted
       });

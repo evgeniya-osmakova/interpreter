@@ -3,6 +3,7 @@ export interface Controls {
   readonly input: HTMLInputElement;
   readonly run: HTMLButtonElement;
   readonly stop: HTMLButtonElement;
+  readonly reset: HTMLButtonElement;
 }
 
 export const renderControls = (): Controls => {
@@ -23,5 +24,9 @@ export const renderControls = (): Controls => {
   stop.type = "button";
   stop.textContent = "Stop";
 
-  return { source, input, run, stop };
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.textContent = "Reset";
+
+  return { source, input, run, stop, reset };
 };
