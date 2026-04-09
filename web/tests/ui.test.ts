@@ -5,6 +5,7 @@ import { makeCell } from "../src/brainfuck/core/cell";
 import { makeProgramCounter } from "../src/brainfuck/core/program-counter";
 import { initialExecState, type ExecState } from "../src/brainfuck/core/state";
 import { writeTape } from "../src/brainfuck/core/tape";
+import { createRunner } from "../src/runtime/runner";
 import { createMachineSnapshot } from "../src/runtime/snapshot";
 import type { RuntimeClient, RuntimeEventHandler } from "../src/runtime/client";
 import type { WorkerEvent, WorkerRequest } from "../src/runtime/worker-protocol";
@@ -34,6 +35,32 @@ class FakeRuntimeClient implements RuntimeClient {
 
   dispose(): void {
     this.disposed = true;
+    this.listeners.clear();
+  }
+}
+
+class RunnerBackedRuntimeClient implements RuntimeClient {
+  private readonly listeners = new Set<RuntimeEventHandler>();
+  private readonly runner = createRunner({
+    emit: (event) => {
+      this.listeners.forEach((listener) => {
+        listener(event);
+      });
+    }
+  });
+
+  send(request: WorkerRequest): void {
+    void this.runner.handleRequest(request);
+  }
+
+  subscribe(handler: RuntimeEventHandler): () => void {
+    this.listeners.add(handler);
+    return () => {
+      this.listeners.delete(handler);
+    };
+  }
+
+  dispose(): void {
     this.listeners.clear();
   }
 }
@@ -314,5 +341,40 @@ describe("browser UI shell", () => {
     appHandle = null;
     expect(client.disposed).toBe(true);
     expect(root.childElementCount).toBe(0);
+  });
+
+  it("runs a real program through the runtime and renders the finished result", async () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const client = new RunnerBackedRuntimeClient();
+
+    appHandle = mountApp(root, client);
+
+    const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
+    const input = root.querySelector<HTMLInputElement>('input[name="input"]');
+    const runButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Run"
+    );
+
+    expect(source).not.toBeNull();
+    expect(input).not.toBeNull();
+    expect(runButton).not.toBeUndefined();
+    if (source === null || input === null || runButton === undefined) {
+      return;
+    }
+
+    source.value = ",.";
+    input.value = "A";
+    runButton.click();
+    await Promise.resolve();
+
+    expect(root.querySelector(".status__label")?.textContent).toBe("Finished");
+    expect(root.querySelector(".output__text")?.textContent).toBe("A");
+    expect(root.querySelector(".output__bytes")?.textContent).toBe("[65]");
+
+    const metrics = getMetricValues(root);
+    expect(metrics.PC).toBe("2");
+    expect(metrics.Input).toBe("0");
+    expect(metrics.Output).toBe("1");
   });
 });

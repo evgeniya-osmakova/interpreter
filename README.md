@@ -14,6 +14,12 @@ The phases are mirrored intentionally rather than implemented as unrelated proje
 
 ## Quick Start
 
+### Whole Repository
+
+```bash
+make check
+```
+
 ### Lean
 
 ```bash
@@ -36,6 +42,7 @@ npm run dev
 - `lean/` builds cleanly with `lake build`
 - `web/` passes `npm test`
 - `web/` builds with `npm run build`
+- the Lean model includes an end-to-end `Hello World` proof artifact
 - the TS engine correctly runs the canonical Brainfuck `Hello World`
 - browser execution is non-blocking via `Web Worker` plus chunked `runSlice`
 
@@ -50,6 +57,7 @@ npm run dev
 | Validation | `Program.Validate` | `program/validate.ts` |
 | Single-step semantics | `Semantics.step` | `semantics/step.ts` |
 | Bounded evaluation | `Semantics.runFuel`, `Semantics.runSlice` | `semantics/eval.ts`, `run-slice.ts` |
+| Browser protocol boundary | n/a | `runtime/worker-protocol.ts`, `runtime/client.ts`, `runtime/runner.worker.ts` |
 | Async browser driver | n/a | `runtime/runner.ts`, `runner.worker.ts` |
 
 ## Browser Execution Model
@@ -60,6 +68,7 @@ The browser shell never executes the interpreter on the main thread.
 - The async driver lives under `web/src/runtime/`.
 - `runner.worker.ts` hosts a `Web Worker`.
 - The worker runs the pure engine in bounded slices via `runSlice`.
+- Worker requests and worker events are both decoded explicitly at the message boundary.
 - After each slice it emits a serializable progress snapshot plus output bytes.
 - The UI only renders those protocol payloads and sends `run` / `stop` requests.
 
@@ -157,6 +166,7 @@ This is a better starting tradeoff than exposing raw `number[]`:
 │       ├── Proofs/
 │       │   ├── Cell.lean
 │       │   ├── Eval.lean
+│       │   ├── HelloWorld.lean
 │       │   ├── Parse.lean
 │       │   ├── Pointer.lean
 │       │   ├── Step.lean
@@ -177,6 +187,7 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │   │   ├── error.ts
     │   │   │   ├── instruction.ts
     │   │   │   ├── pointer.ts
+    │   │   │   ├── program-counter.ts
     │   │   │   ├── result.ts
     │   │   │   ├── state.ts
     │   │   │   └── tape.ts
@@ -190,6 +201,8 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │       ├── run-slice.ts
     │   │       └── step.ts
     │   ├── runtime/
+    │   │   ├── budget.ts
+    │   │   ├── client.ts
     │   │   ├── runner.ts
     │   │   ├── runner.worker.ts
     │   │   ├── snapshot.ts
@@ -204,9 +217,12 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │       ├── output-view.ts
     │       └── status-view.ts
     └── tests/
+        ├── budget.test.ts
         ├── eval.test.ts
         ├── hello-world.test.ts
         ├── runtime.test.ts
         ├── step.test.ts
+        ├── ui.test.ts
         └── validation.test.ts
+        └── worker-protocol.test.ts
 ```
