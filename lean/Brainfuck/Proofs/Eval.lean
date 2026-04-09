@@ -135,6 +135,40 @@ theorem runSlice_ok_state_matches_runFuel (program : ValidatedProgram)
                 have hrun := ih nextState nextProgress hslice
                 simpa [runFuel, hterm, hstep] using hrun
 
+theorem runSlice_ok_not_done_exhausts_budget (program : ValidatedProgram)
+    (state : ExecState program.length)
+    (budget : Nat)
+    (progress : SliceProgress program.length)
+    (h : runSlice program state budget = .ok progress)
+    (hnot : progress.done = false) :
+    progress.stepsExecuted = budget := by
+  induction budget generalizing state progress with
+  | zero =>
+      simp [runSlice] at h
+      cases h
+      simp
+  | succ remaining ih =>
+      unfold runSlice at h
+      by_cases hterm : isTerminated program state
+      · simp [hterm] at h
+        cases h
+        simp at hnot
+      · simp [hterm] at h
+        cases hstep : step program state with
+        | err error =>
+            simp [hstep] at h
+        | ok nextState =>
+            cases hslice : runSlice program nextState remaining with
+            | err error =>
+                simp [hstep, hslice] at h
+            | ok nextProgress =>
+                simp [hstep, hslice] at h
+                cases h
+                have hnext : nextProgress.done = false := by
+                  simpa using hnot
+                have hbudget := ih nextState nextProgress hslice hnext
+                simp [hbudget]
+
 theorem runFuel_zero_returns_initial (program : ValidatedProgram)
     (state : ExecState program.length) :
     runFuel program 0 state = .ok state := rfl

@@ -182,4 +182,18 @@ describe("runSlice semantics", () => {
 
     expect(finishedSlice.value.state).toEqual(finishedFuel.value);
   });
+
+  it("exhausts the full budget whenever done is false", () => {
+    const program = parseAndValidate("+[]");
+    const result = runSlice(program, initialExecState(), 3);
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") {
+      return;
+    }
+
+    expect(result.value.done).toBe(false);
+    expect(result.value.stepsExecuted).toBe(3);
+    expect(result.value.state.pc).toBeLessThan(program.length);
+  });
 });
