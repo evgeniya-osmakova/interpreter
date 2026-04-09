@@ -41,13 +41,14 @@ This repository commits to one concrete validated program design:
 - `ValidatedProgram` stores:
   - `length : Nat`
   - `instructions : Vector (ValidatedInstruction length) length`
-- loop instructions carry resolved jump targets as `Fin length`
+- loop instructions carry resolved next program counters as `Fin (length + 1)`
 
 Why this is the best tradeoff:
 
 - In Lean, jump targets are in-bounds by construction, so `step` does not need extra runtime target checks or proof plumbing around invalid indices.
+- In Lean, `jumpIfZero` can jump directly to normal termination when the matching `]` is the final instruction, which is a more exact operational model than storing only a bracket index.
 - In Lean, program length is part of the type of both instructions and execution state, which makes step semantics and later proofs more direct.
-- In TypeScript, the same shape mirrors naturally using a branded `ProgramIndex` number produced only by validation.
+- In TypeScript, the same shape mirrors naturally using a branded `JumpTarget` number produced only by validation.
 - This is better than evaluating raw `[` and `]` tokens directly because the PDF requires bracket matching before execution.
 - This is better than storing a separate external jump map because the target is carried by the validated instruction itself, so the mirrored structure stays local and explicit in both phases.
 
@@ -100,7 +101,8 @@ This is a better starting tradeoff than exposing raw `number[]`:
 │       │   ├── Cell.lean
 │       │   ├── Eval.lean
 │       │   ├── Pointer.lean
-│       │   └── Step.lean
+│       │   ├── Step.lean
+│       │   └── Validate.lean
 │       └── Semantics/
 │           ├── Eval.lean
 │           └── Step.lean

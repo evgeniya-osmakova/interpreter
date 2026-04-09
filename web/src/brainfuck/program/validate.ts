@@ -3,8 +3,8 @@ import { err, ok, type Result } from "../core/result";
 import type { InstructionToken } from "../core/instruction";
 import type { RawProgram } from "./raw-program";
 import {
-  makeProgramIndex,
-  type ProgramIndex,
+  makeJumpTarget,
+  type JumpTarget,
   type ValidatedInstruction,
   type ValidatedProgram
 } from "./validated-program";
@@ -45,18 +45,19 @@ const buildJumpMap = (
 const resolveTarget = (
   jumps: Map<number, number>,
   sourceIndex: number,
-  length: number
-): Result<ProgramIndex, ValidationError> => {
+  length: number,
+  offset = 0
+): Result<JumpTarget, ValidationError> => {
   const target = jumps.get(sourceIndex);
   if (target === undefined) {
-    return err<ProgramIndex, ValidationError>({
+    return err<JumpTarget, ValidationError>({
       tag: "invalidJumpTarget",
       index: sourceIndex,
       target: -1
     });
   }
 
-  return makeProgramIndex(target, length, sourceIndex);
+  return makeJumpTarget(target + offset, length, sourceIndex);
 };
 
 const tokenToValidatedInstruction = (
@@ -79,7 +80,7 @@ const tokenToValidatedInstruction = (
     case "input":
       return ok({ tag: "input" });
     case "loopStart": {
-      const target = resolveTarget(jumps, index, length);
+      const target = resolveTarget(jumps, index, length, 1);
       return target.tag === "ok"
         ? ok({ tag: "jumpIfZero", target: target.value })
         : err(target.error);

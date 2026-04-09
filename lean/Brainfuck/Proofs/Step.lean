@@ -11,9 +11,9 @@ theorem nextPc_in_bounds {programLength : Nat} (pc : Fin (programLength + 1)) :
     (nextPc pc).val < programLength + 1 :=
   (nextPc pc).isLt
 
-theorem jumpPc_in_bounds {programLength : Nat} (target : ProgramIndex programLength) :
-    (jumpPc target).val < programLength + 1 :=
-  (jumpPc target).isLt
+theorem jump_target_in_bounds {programLength : Nat} (target : ProgramCounter programLength) :
+    target.val < programLength + 1 :=
+  target.isLt
 
 theorem step_on_terminated_state_is_ok (program : ValidatedProgram)
     (state : ExecState program.length) (h : state.pc.val = program.length) :

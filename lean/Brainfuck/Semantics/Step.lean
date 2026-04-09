@@ -16,10 +16,6 @@ def nextPc {programLength : Nat} (pc : Fin (programLength + 1)) : Fin (programLe
   else
     ⟨programLength, Nat.lt_succ_self _⟩
 
-def jumpPc {programLength : Nat} (target : ProgramIndex programLength) :
-    Fin (programLength + 1) :=
-  ⟨target.val, Nat.lt_trans target.isLt (Nat.lt_succ_self _)⟩
-
 def isTerminated (program : ValidatedProgram) (state : ExecState program.length) : Bool :=
   state.pc.val = program.length
 
@@ -86,7 +82,7 @@ def step (program : ValidatedProgram) (state : ExecState program.length) :
     | .jumpIfZero target =>
         let cell := Tape.read state.machine.tape state.machine.pointer
         if cell.val = 0 then
-          .ok { state with pc := jumpPc target }
+          .ok { state with pc := target }
         else
           .ok { state with pc := nextPc state.pc }
     | .jumpIfNonZero target =>
@@ -94,7 +90,7 @@ def step (program : ValidatedProgram) (state : ExecState program.length) :
         if cell.val = 0 then
           .ok { state with pc := nextPc state.pc }
         else
-          .ok { state with pc := jumpPc target }
+          .ok { state with pc := target }
   else
     .ok state
 

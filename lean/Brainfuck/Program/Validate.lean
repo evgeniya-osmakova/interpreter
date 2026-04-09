@@ -37,9 +37,9 @@ private def lookupJumpTarget (pairs : Array (Nat × Nat)) (sourceIndex : Nat) : 
     else
       none
 
-private def mkProgramIndex (length : Nat) (sourceIndex target : Nat) :
-    Result (ProgramIndex length) ValidationError :=
-  if h : target < length then
+private def mkProgramCounter (length : Nat) (sourceIndex target : Nat) :
+    Result (ProgramCounter length) ValidationError :=
+  if h : target < length + 1 then
     .ok ⟨target, h⟩
   else
     .err (.invalidJumpTarget sourceIndex target)
@@ -57,12 +57,12 @@ private def toValidatedInstruction (length : Nat) (pairs : Array (Nat × Nat))
   | .loopStart =>
       match lookupJumpTarget pairs index with
       | some target =>
-          Result.map ValidatedInstruction.jumpIfZero (mkProgramIndex length index target)
+          Result.map ValidatedInstruction.jumpIfZero (mkProgramCounter length index (target + 1))
       | none => .err (.invalidJumpTarget index index)
   | .loopEnd =>
       match lookupJumpTarget pairs index with
       | some target =>
-          Result.map ValidatedInstruction.jumpIfNonZero (mkProgramIndex length index target)
+          Result.map ValidatedInstruction.jumpIfNonZero (mkProgramCounter length index target)
       | none => .err (.invalidJumpTarget index index)
 
 def validate (program : RawProgram) : Result ValidatedProgram ValidationError :=

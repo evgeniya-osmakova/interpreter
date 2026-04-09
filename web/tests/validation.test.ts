@@ -44,4 +44,23 @@ describe("validation", () => {
       }
     });
   });
+
+  it("resolves loop jump targets to next program counters", () => {
+    const parsed = parse("[]");
+    expect(parsed.tag).toBe("ok");
+    if (parsed.tag !== "ok") {
+      return;
+    }
+
+    expect(validate(parsed.value)).toEqual({
+      tag: "ok",
+      value: {
+        length: 2,
+        instructions: [
+          { tag: "jumpIfZero", target: 2 },
+          { tag: "jumpIfNonZero", target: 0 }
+        ]
+      }
+    });
+  });
 });

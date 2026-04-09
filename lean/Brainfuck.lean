@@ -13,5 +13,6 @@ import Brainfuck.Proofs.Cell
 import Brainfuck.Proofs.Eval
 import Brainfuck.Proofs.Pointer
 import Brainfuck.Proofs.Step
+import Brainfuck.Proofs.Validate
 import Brainfuck.Semantics.Eval
 import Brainfuck.Semantics.Step
