@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { makeCell } from "../src/brainfuck/core/cell";
-import { makeProgramCounter } from "../src/brainfuck/core/program-counter";
 import { parse } from "../src/brainfuck/program/parse";
 import { validate } from "../src/brainfuck/program/validate";
+import { makeProgramCounter } from "../src/brainfuck/program/validated-program";
 import { initialExecState } from "../src/brainfuck/core/state";
 import { readTape, writeTape } from "../src/brainfuck/core/tape";
 import { runWithInput } from "../src/brainfuck/semantics/eval";

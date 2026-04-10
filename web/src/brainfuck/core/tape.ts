@@ -2,7 +2,6 @@ import {
   decrementCell,
   incrementCell,
   makeCell,
-  MIN_CELL_VALUE,
   zeroCell,
   type Cell
 } from "./cell";
@@ -16,23 +15,35 @@ export type Tape = {
   readonly [bufferKey]: Uint8Array;
 };
 
-const fromBuffer = (buffer: Uint8Array): Tape => ({ [bufferKey]: buffer });
+const createTapeFromBuffer = (buffer: Uint8Array): Tape => ({ [bufferKey]: buffer });
 
-const cloneBuffer = (tape: Tape): Uint8Array => new Uint8Array(tape[bufferKey]);
+const getBufferAt = (tape: Tape, index: number): number => {
+  const buffer = tape[bufferKey];
+  if (!(buffer instanceof Uint8Array) || index < MIN_POINTER_INDEX || index >= buffer.length) {
+    throw new Error(
+      `Tape invariant violated: index ${index} is outside backing buffer length ${
+        buffer instanceof Uint8Array ? buffer.length : 0
+      }`
+    );
+  }
+
+  return buffer[index] as number;
+};
 
 export const blankTape = (): Tape => {
   const buffer = new Uint8Array(TAPE_LENGTH);
   buffer.fill(zeroCell() as number);
-  return fromBuffer(buffer);
+  return createTapeFromBuffer(buffer);
 };
 
 export const readTape = (tape: Tape, pointer: Pointer): Cell =>
-  makeCell(tape[bufferKey][pointer as number] ?? MIN_CELL_VALUE);
+  makeCell(getBufferAt(tape, pointer as number));
 
 export const writeTape = (tape: Tape, pointer: Pointer, cell: Cell): Tape => {
-  const next = cloneBuffer(tape);
+  getBufferAt(tape, pointer as number);
+  const next = new Uint8Array(tape[bufferKey]);
   next[pointer as number] = cell as number;
-  return fromBuffer(next);
+  return createTapeFromBuffer(next);
 };
 
 export const mapTapeCell = (tape: Tape, pointer: Pointer, f: (cell: Cell) => Cell): Tape =>
@@ -65,7 +76,7 @@ export const inspectTapeWindow = (
   for (let index = start; index <= end; index += 1) {
     cells.push({
       index,
-      value: tape[bufferKey][index] ?? MIN_CELL_VALUE,
+      value: getBufferAt(tape, index),
       isPointer: index === center
     });
   }

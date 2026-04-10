@@ -1,7 +1,7 @@
 import { initialExecState } from "../brainfuck/core/state";
 import { parse } from "../brainfuck/program/parse";
 import { validate } from "../brainfuck/program/validate";
-import { runSlice } from "../brainfuck/semantics/run-slice";
+import { runSlice } from "../brainfuck/semantics/eval";
 import { isTerminated } from "../brainfuck/semantics/step";
 import type { ValidatedProgram } from "../brainfuck/program/validated-program";
 import type { ExecState } from "../brainfuck/core/state";

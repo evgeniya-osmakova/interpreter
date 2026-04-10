@@ -1,9 +1,8 @@
 import type { Cell } from "./cell";
-import type { ProgramCounter } from "./program-counter";
 import type { Pointer } from "./pointer";
 import { blankTape, type Tape } from "./tape";
 import { zeroPointer } from "./pointer";
-import { zeroProgramCounter } from "./program-counter";
+import { zeroProgramCounter, type ProgramCounter } from "../program/validated-program";
 
 export interface MachineState {
   readonly tape: Tape;

@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { makeCell } from "../src/brainfuck/core/cell";
-import { makeProgramCounter } from "../src/brainfuck/core/program-counter";
 import { initialExecState } from "../src/brainfuck/core/state";
 import { parse } from "../src/brainfuck/program/parse";
 import { validate } from "../src/brainfuck/program/validate";
-import { runFuel, runWithInput } from "../src/brainfuck/semantics/eval";
-import { runSlice } from "../src/brainfuck/semantics/run-slice";
+import { makeProgramCounter } from "../src/brainfuck/program/validated-program";
+import { runFuel, runSlice, runWithInput } from "../src/brainfuck/semantics/eval";
 
 const parseAndValidate = (source: string) => {
   const parsed = parse(source);

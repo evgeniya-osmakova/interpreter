@@ -52,12 +52,12 @@ npm run dev
 | Concept | Lean | TypeScript |
 | --- | --- | --- |
 | Result | `Brainfuck.Core.Result` | `brainfuck/core/result.ts` |
-| Tape and control domain | `Cell`, `Tape`, `Pointer`, `ProgramCounter` | `cell.ts`, `tape.ts`, `pointer.ts`, `program-counter.ts` |
+| Tape and core machine domain | `Cell`, `Tape`, `Pointer` | `cell.ts`, `tape.ts`, `pointer.ts` |
 | Raw program | `RawProgram` | `raw-program.ts` |
-| Validated program | `ValidatedProgram` | `validated-program.ts` |
+| Validated program | `ValidatedProgram`, `ProgramCounter` | `validated-program.ts` |
 | Validation | `Program.Validate` | `program/validate.ts` |
 | Single-step semantics | `Semantics.step` | `semantics/step.ts` |
-| Bounded evaluation | `Semantics.runFuel`, `Semantics.runSlice` | `semantics/eval.ts`, `run-slice.ts` |
+| Bounded evaluation | `Semantics.runFuel`, `Semantics.runSlice` | `semantics/eval.ts` |
 | Browser protocol boundary | n/a | `runtime/worker-protocol.ts`, `runtime/client.ts`, `runtime/runner.worker.ts` |
 | Async browser driver | n/a | `runtime/runner.ts`, `runner.worker.ts` |
 
@@ -111,7 +111,7 @@ Why this is the best tradeoff:
 - In Lean, jump targets are in-bounds by construction, so `step` does not need extra runtime target checks or proof plumbing around invalid indices.
 - In Lean, `jumpIfZero` can jump directly to normal termination when the matching `]` is the final instruction, which is a more exact operational model than storing only a bracket index.
 - In Lean, program length is part of the type of both instructions and execution state, which makes step semantics and later proofs more direct.
-- In TypeScript, loop instruction targets now use the same branded `ProgramCounter` domain type as `ExecState.pc`, matching Lean more closely than a separate jump-target brand.
+- In TypeScript, loop instruction targets now use the same branded `ProgramCounter` domain type as `ExecState.pc`, and that type now lives in `program/validated-program.ts`, matching Lean ownership more closely than a separate `core/program-counter.ts` module.
 - In TypeScript, `makeValidatedProgram` derives `length` from the validated instruction array, so the normal construction path cannot drift into a mismatched `length`/`instructions` pair.
 - In TypeScript, `ValidatedProgram` is now an opaque branded value created by `makeValidatedProgram`, which makes malformed post-validation program objects harder to construct on the normal path.
 - In TypeScript, `ExecState.pc` is now a branded `ProgramCounter`, so control state is no longer a raw `number` on the normal path.
@@ -189,7 +189,6 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │   │   ├── error.ts
     │   │   │   ├── instruction.ts
     │   │   │   ├── pointer.ts
-    │   │   │   ├── program-counter.ts
     │   │   │   ├── result.ts
     │   │   │   ├── state.ts
     │   │   │   └── tape.ts
@@ -200,7 +199,6 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │   │   └── validated-program.ts
     │   │   └── semantics/
     │   │       ├── eval.ts
-    │   │       ├── run-slice.ts
     │   │       └── step.ts
     │   ├── runtime/
     │   │   ├── budget.ts

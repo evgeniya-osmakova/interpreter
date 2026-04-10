@@ -2,7 +2,7 @@ import { MIN_CELL_VALUE } from "../core/cell";
 import {
   isProgramCounterTerminated,
   nextProgramCounter
-} from "../core/program-counter";
+} from "../program/validated-program";
 import type { RuntimeError } from "../core/error";
 import { movePointerLeft, movePointerRight } from "../core/pointer";
 import { err, ok, type Result } from "../core/result";

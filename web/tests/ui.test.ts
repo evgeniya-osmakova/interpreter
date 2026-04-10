@@ -2,9 +2,9 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { makeCell } from "../src/brainfuck/core/cell";
-import { makeProgramCounter } from "../src/brainfuck/core/program-counter";
 import { initialExecState, type ExecState } from "../src/brainfuck/core/state";
 import { writeTape } from "../src/brainfuck/core/tape";
+import { makeProgramCounter } from "../src/brainfuck/program/validated-program";
 import { createRunner } from "../src/runtime/runner";
 import { createMachineSnapshot } from "../src/runtime/snapshot";
 import type { RuntimeClient, RuntimeEventHandler } from "../src/runtime/client";

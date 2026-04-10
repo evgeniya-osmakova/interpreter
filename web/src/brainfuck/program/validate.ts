@@ -1,9 +1,9 @@
-import type { ProgramCounter } from "../core/program-counter";
 import type { ValidationError } from "../core/error";
 import { err, ok, type Result } from "../core/result";
 import type { InstructionToken } from "../core/instruction";
 import type { RawProgram } from "./raw-program";
 import {
+  type ProgramCounter,
   makeValidatedTarget,
   makeValidatedProgram,
   type ValidatedInstruction,
