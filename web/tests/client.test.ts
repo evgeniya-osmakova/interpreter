@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bindRuntimeClient, type WorkerEndpoint } from "../src/runtime/client";
+import { bindRuntimeClient, type WorkerEndpoint } from "../src/runtime/client/runtime-client";
 
 class FakeWorkerEndpoint implements WorkerEndpoint {
   onmessage: ((message: MessageEvent<unknown>) => void) | null = null;

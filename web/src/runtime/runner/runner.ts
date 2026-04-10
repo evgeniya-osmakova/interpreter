@@ -1,13 +1,13 @@
-import { initialExecState } from "../brainfuck/core/state";
-import { parse } from "../brainfuck/program/parse";
-import { validate } from "../brainfuck/program/validate";
-import { runSlice } from "../brainfuck/semantics/eval";
-import { isTerminated } from "../brainfuck/semantics/step";
-import type { ValidatedProgram } from "../brainfuck/program/validated-program";
-import type { ExecState } from "../brainfuck/core/state";
+import { initialExecState } from "../../brainfuck/core/state";
+import { parse } from "../../brainfuck/program/parse";
+import { validate } from "../../brainfuck/program/validate";
+import { runSlice } from "../../brainfuck/semantics/eval";
+import { isTerminated } from "../../brainfuck/semantics/step";
+import type { ValidatedProgram } from "../../brainfuck/program/validated-program";
+import type { ExecState } from "../../brainfuck/core/state";
 import { createMachineSnapshot } from "./snapshot";
 import { PLAYBACK_STEP_BUDGET, DEFAULT_PLAYBACK_DELAY_MS } from "./budget";
-import type { WorkerEvent, WorkerRequest } from "./worker-protocol";
+import type { WorkerEvent, WorkerRequest } from "../protocol/worker-protocol";
 
 export interface RunnerDeps {
   readonly emit: (event: WorkerEvent) => void;
@@ -33,6 +33,9 @@ export const createRunner = (deps: RunnerDeps) => {
   let playing = false;
 
   const pause = deps.pause ?? defaultPause;
+
+  const hasLoadedSession = (): boolean =>
+    session !== null && !isTerminated(session.program, session.state);
 
   const emitProgress = (
     currentSession: LoadedSession,
@@ -115,9 +118,12 @@ export const createRunner = (deps: RunnerDeps) => {
   return {
     handleRequest(request: WorkerRequest): Promise<void> {
       if (request.tag === "pause") {
+        const canPause = playing || hasLoadedSession();
         playing = false;
         activePlaybackId += 1;
-        deps.emit({ tag: "paused" });
+        if (canPause) {
+          deps.emit({ tag: "paused" });
+        }
         return Promise.resolve();
       }
 

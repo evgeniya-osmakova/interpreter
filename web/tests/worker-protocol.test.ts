@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeWorkerEvent, decodeWorkerRequest } from "../src/runtime/worker-protocol";
+import { decodeWorkerEvent, decodeWorkerRequest } from "../src/runtime/protocol/worker-protocol";
 import { makeCell } from "../src/brainfuck/core/cell";
 
 describe("worker protocol", () => {

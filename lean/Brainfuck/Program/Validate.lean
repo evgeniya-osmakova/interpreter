@@ -80,29 +80,6 @@ def validate (program : RawProgram) : Result ValidatedProgram ValidationError :=
               instructions := instructions
             }
 
-theorem validate_result_preserves_raw_length (program : RawProgram) :
-    match validate program with
-    | .ok validated => validated.length = program.instructions.size
-    | .err _ => True := by
-  unfold validate
-  cases hPairs : buildJumpPairs program.instructions with
-  | err error =>
-      simp
-  | ok pairs =>
-      cases hMap : (program.instructions.toVector).mapIdxM
-          (m := fun α => Result α ValidationError)
-          (fun index token =>
-            toValidatedInstruction (program.instructions.toVector).size pairs index token) with
-      | err error =>
-          simp [hMap]
-      | ok instructions =>
-          simp [hMap]
-
-theorem validate_ok_preserves_raw_length (program : RawProgram) (validated : ValidatedProgram)
-    (h : validate program = .ok validated) :
-    validated.length = program.instructions.size := by
-  simpa [h] using validate_result_preserves_raw_length program
-
 end Validate
 
 end Brainfuck.Program

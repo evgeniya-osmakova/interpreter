@@ -1,7 +1,7 @@
-import { makeCell, MAX_CELL_VALUE, MIN_CELL_VALUE, type Cell } from "../brainfuck/core/cell";
-import { err, ok, type Result } from "../brainfuck/core/result";
-import type { TapeWindowCell } from "../brainfuck/core/tape";
-import type { RuntimeError, ValidationError } from "../brainfuck/core/error";
+import { makeCell, MAX_CELL_VALUE, MIN_CELL_VALUE, type Cell } from "../../brainfuck/core/cell";
+import { err, ok, type Result } from "../../brainfuck/core/result";
+import type { TapeWindowCell } from "../../brainfuck/core/tape";
+import type { RuntimeError, ValidationError } from "../../brainfuck/core/error";
 
 export type WorkerRequest =
   | { readonly tag: "play"; readonly source: string; readonly input: readonly Cell[] }

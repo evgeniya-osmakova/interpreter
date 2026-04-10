@@ -43,11 +43,19 @@ theorem validate_result_preserves_raw_length (program : RawProgram) :
     match Validate.validate program with
     | .ok validated => validated.length = program.instructions.size
     | .err _ => True := by
-  simpa using Validate.validate_result_preserves_raw_length program
+  cases h : Validate.validate program with
+  | err error =>
+      simp
+  | ok validated =>
+      unfold Validate.validate at h
+      split at h <;> simp at h
+      split at h <;> simp at h
+      cases h
+      simp
 
 theorem validate_ok_preserves_raw_length (program : RawProgram) (validated : ValidatedProgram)
     (h : Validate.validate program = .ok validated) :
     validated.length = program.instructions.size := by
-  simpa using Validate.validate_ok_preserves_raw_length program validated h
+  simpa [h] using validate_result_preserves_raw_length program
 
 end Brainfuck.Proofs

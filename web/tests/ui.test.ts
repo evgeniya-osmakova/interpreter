@@ -5,11 +5,11 @@ import { makeCell } from "../src/brainfuck/core/cell";
 import { initialExecState, type ExecState } from "../src/brainfuck/core/state";
 import { writeTape } from "../src/brainfuck/core/tape";
 import { makeProgramCounter } from "../src/brainfuck/program/validated-program";
-import { createRunner } from "../src/runtime/runner";
-import { createMachineSnapshot } from "../src/runtime/snapshot";
-import type { RuntimeClient, RuntimeEventHandler } from "../src/runtime/client";
-import type { WorkerEvent, WorkerRequest } from "../src/runtime/worker-protocol";
-import { mountApp, type AppHandle } from "../src/ui/app";
+import { createRunner } from "../src/runtime/runner/runner";
+import { createMachineSnapshot } from "../src/runtime/runner/snapshot";
+import type { RuntimeClient, RuntimeEventHandler } from "../src/runtime/client/runtime-client";
+import type { WorkerEvent, WorkerRequest } from "../src/runtime/protocol/worker-protocol";
+import { mountApp, type AppHandle } from "../src/app";
 
 class FakeRuntimeClient implements RuntimeClient {
   readonly requests: WorkerRequest[] = [];
@@ -319,6 +319,49 @@ describe("browser UI shell", () => {
     expect(root.querySelector(".output__text")?.textContent).toBe("");
     expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe("No executable instructions yet.");
     expect(root.querySelector(".tape-cell--pointer .tape-cell__value")?.textContent).toBe("0");
+  });
+
+  it("stops the active session when source changes and ignores stale progress events", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const client = new FakeRuntimeClient();
+    const state = createProgressState();
+
+    appHandle = mountApp(root, client);
+
+    const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
+    const playButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent === "Play"
+    );
+
+    expect(source).not.toBeNull();
+    expect(playButton).not.toBeUndefined();
+    if (source === null || playButton === undefined) {
+      return;
+    }
+
+    source.value = ",.";
+    playButton.click();
+
+    source.value = "+";
+    source.dispatchEvent(new Event("input"));
+
+    expect(client.requests.at(-1)).toEqual({ tag: "stop" });
+    expect(root.querySelector(".status__label")?.textContent).toBe("Waiting to start");
+
+    client.emit({
+      tag: "progress",
+      snapshot: createMachineSnapshot(state),
+      output: [65],
+      done: false,
+      stepsExecuted: 2
+    });
+
+    expect(root.querySelector(".status__label")?.textContent).toBe("Waiting to start");
+    expect(root.querySelector(".output__text")?.textContent).toBe("");
+
+    client.emit({ tag: "stopped" });
+    expect(root.querySelector(".status__label")?.textContent).toBe("Waiting to start");
   });
 
   it("sends pause requests and reflects paused state", () => {

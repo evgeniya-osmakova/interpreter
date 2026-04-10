@@ -1,7 +1,7 @@
-import { PROGRAM_EXAMPLES, type ProgramExample } from "./examples";
+import type { InputModeState } from "../../application/input-mode";
+import { PROGRAM_EXAMPLES, type ProgramExample } from "../../application/examples";
 
 const PROGRAM_SOURCE_ROWS = 12;
-const PROGRAM_INPUT_BYTES_PER_READ = 1;
 
 export interface Controls {
   readonly examplesSection: HTMLElement;
@@ -15,19 +15,13 @@ export interface Controls {
   readonly reset: HTMLButtonElement;
   readonly examples: HTMLElement;
   setSelectedExample: (example: ProgramExample | null) => void;
-  setInputMode: (enabled: boolean, description: string) => void;
+  setInputMode: (state: InputModeState) => void;
 }
 
 interface ControlField {
   readonly element: HTMLElement;
   readonly description: HTMLParagraphElement | null;
 }
-
-const renderCommaCommand = (): HTMLElement => {
-  const code = document.createElement("code");
-  code.textContent = ",";
-  return code;
-};
 
 const createField = (
   titleText: string,
@@ -45,13 +39,16 @@ const createField = (
 
   field.append(title);
   let description: HTMLParagraphElement | null = null;
+
   if (descriptionText !== "") {
     description = document.createElement("p");
     description.className = "control-field__description";
     description.textContent = descriptionText;
     field.append(description);
   }
+
   field.append(control);
+
   return { element: field, description };
 };
 
@@ -131,26 +128,6 @@ export const renderControls = (): Controls => {
   const inputDescription = document.createElement("p");
   inputDescription.className = "control-field__description control-field__description--support";
 
-  const setInputDescription = (enabled: boolean, detail: string): void => {
-    inputDescription.replaceChildren();
-
-    if (!enabled) {
-      inputDescription.append(
-        "This program does not use the ",
-        renderCommaCommand(),
-        " command, so Program input is disabled."
-      );
-      return;
-    }
-
-    inputDescription.append(
-      "Each executed ",
-      renderCommaCommand(),
-      ` command consumes ${PROGRAM_INPUT_BYTES_PER_READ} byte. `,
-      detail
-    );
-  };
-
   inputField.append(inputLabel, input, inputDescription);
 
   const runPanel = document.createElement("section");
@@ -200,13 +177,11 @@ export const renderControls = (): Controls => {
           ? "\u00A0"
           : example.description;
     },
-    setInputMode(enabled, description) {
-      input.disabled = !enabled;
-      input.setAttribute("aria-disabled", String(!enabled));
-      input.placeholder = enabled
-        ? "Text consumed by the , instruction"
-        : "This program does not read input";
-      setInputDescription(enabled, description);
+    setInputMode(state) {
+      input.disabled = !state.enabled;
+      input.setAttribute("aria-disabled", String(!state.enabled));
+      input.placeholder = state.placeholder;
+      inputDescription.textContent = state.description;
     }
   };
 };

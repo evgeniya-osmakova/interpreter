@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PLAYBACK_DELAY_MS, PLAYBACK_STEP_BUDGET } from "../src/runtime/budget";
+import { DEFAULT_PLAYBACK_DELAY_MS, PLAYBACK_STEP_BUDGET } from "../src/runtime/runner/budget";
 
 describe("runtime playback defaults", () => {
   it("uses single-step slices for the visualizer loop", () => {

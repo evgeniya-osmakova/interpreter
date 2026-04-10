@@ -1,5 +1,5 @@
-import { scanInstructions } from "../brainfuck/program/parse";
-import type { MachineSnapshot } from "../runtime/worker-protocol";
+import { scanInstructions } from "../../brainfuck/program/parse";
+import type { MachineSnapshot } from "../../runtime/protocol/worker-protocol";
 
 const INSTRUCTION_WINDOW_RADIUS = 480;
 const INSTRUCTION_WINDOW_SIZE = INSTRUCTION_WINDOW_RADIUS * 2 + 1;

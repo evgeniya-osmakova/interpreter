@@ -4,7 +4,7 @@ import {
   countUtf8Bytes,
   decodeBytesToText,
   encodeTextToCells
-} from "../src/ui/text-codec";
+} from "../src/application/text-codec";
 
 describe("ui text codec", () => {
   it("encodes and decodes UTF-8 text at the browser boundary", () => {

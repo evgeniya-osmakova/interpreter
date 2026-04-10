@@ -12,7 +12,6 @@ import {
 
 const DEFAULT_JUMP_TARGET_OFFSET = 0;
 const LOOP_START_NEXT_INSTRUCTION_OFFSET = 1;
-const MISSING_JUMP_TARGET_SENTINEL = -1;
 
 const buildJumpMap = (
   instructions: readonly InstructionToken[]
@@ -58,7 +57,7 @@ const resolveTarget = (
     return err<ProgramCounter, ValidationError>({
       tag: "invalidJumpTarget",
       index: sourceIndex,
-      target: MISSING_JUMP_TARGET_SENTINEL
+      target: sourceIndex
     });
   }
 

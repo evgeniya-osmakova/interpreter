@@ -64,7 +64,7 @@ input:disabled {
   cursor: not-allowed;
 }
 
-.hero {
+.intro {
   display: grid;
   gap: 5px;
   margin-bottom: 5px;
@@ -74,8 +74,8 @@ input:disabled {
   box-shadow: 0 18px 45px rgba(16, 32, 56, 0.08);
 }
 
-.hero__lead,
-.hero__link {
+.intro__lead,
+.intro__link {
   margin: 0;
   color: #35506d;
 }

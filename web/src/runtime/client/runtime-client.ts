@@ -1,4 +1,4 @@
-import { decodeWorkerEvent, type WorkerEvent, type WorkerRequest } from "./worker-protocol";
+import { decodeWorkerEvent, type WorkerEvent, type WorkerRequest } from "../protocol/worker-protocol";
 
 export type RuntimeEventHandler = (event: WorkerEvent) => void;
 
@@ -48,7 +48,7 @@ export const bindRuntimeClient = (worker: WorkerEndpoint): RuntimeClient => {
 
 export const createWorkerRuntimeClient = (): RuntimeClient =>
   bindRuntimeClient(
-    new Worker(new URL("./runner.worker.ts", import.meta.url), {
+    new Worker(new URL("../runner/runner.worker.ts", import.meta.url), {
       type: "module"
     })
   );

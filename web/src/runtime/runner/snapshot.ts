@@ -1,9 +1,9 @@
-import { MIN_CELL_VALUE, type Cell } from "../brainfuck/core/cell";
-import { MIN_POINTER_INDEX } from "../brainfuck/core/pointer";
-import { readTape, inspectTapeWindow } from "../brainfuck/core/tape";
-import type { ExecState } from "../brainfuck/core/state";
-import { programCounterValue } from "../brainfuck/program/validated-program";
-import type { MachineSnapshot } from "./worker-protocol";
+import { MIN_CELL_VALUE, type Cell } from "../../brainfuck/core/cell";
+import { MIN_POINTER_INDEX } from "../../brainfuck/core/pointer";
+import { readTape, inspectTapeWindow } from "../../brainfuck/core/tape";
+import type { ExecState } from "../../brainfuck/core/state";
+import { programCounterValue } from "../../brainfuck/program/validated-program";
+import type { MachineSnapshot } from "../protocol/worker-protocol";
 
 export const DEFAULT_SNAPSHOT_TAPE_WINDOW_RADIUS = 10;
 const DEFAULT_SNAPSHOT_TAPE_WINDOW_SIZE = DEFAULT_SNAPSHOT_TAPE_WINDOW_RADIUS * 2 + 1;

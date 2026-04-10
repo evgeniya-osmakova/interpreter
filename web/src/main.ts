@@ -1,6 +1,6 @@
-import "./styles/app.css";
-import { createWorkerRuntimeClient } from "./runtime/client";
-import { mountApp } from "./ui/app";
+import "./ui/styles/app.css";
+import { createWorkerRuntimeClient } from "./runtime/client/runtime-client";
+import { mountApp } from "./app";
 
 const root = document.querySelector<HTMLElement>("#app");
 

@@ -71,7 +71,7 @@ The browser shell never executes the interpreter on the main thread.
 - The worker runs the pure engine in bounded slices via `runSlice`.
 - Worker requests and worker events are both decoded explicitly at the message boundary.
 - After each slice it emits a serializable progress snapshot plus output bytes.
-- The UI only renders those protocol payloads and sends `run` / `stop` requests.
+- The UI only renders those protocol payloads and sends `play` / `step` / `pause` / `stop` requests.
 
 This is better than timers on the main thread because non-terminating or long-running programs cannot freeze the UI thread.
 
@@ -211,11 +211,14 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │   └── app.css
     │   └── ui/
     │       ├── app.ts
+    │       ├── app-runtime.ts
+    │       ├── app-text.ts
     │       ├── controls.ts
     │       ├── examples.ts
-    │       ├── inspector-view.ts
     │       ├── output-view.ts
-    │       └── status-view.ts
+    │       ├── program-view.ts
+    │       ├── status-view.ts
+    │       └── text-codec.ts
     └── tests/
         ├── budget.test.ts
         ├── client.test.ts

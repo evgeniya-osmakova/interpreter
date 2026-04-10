@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createRunner } from "../src/runtime/runner";
-import type { WorkerEvent, WorkerRequest } from "../src/runtime/worker-protocol";
+import { createRunner } from "../src/runtime/runner/runner";
+import type { WorkerEvent, WorkerRequest } from "../src/runtime/protocol/worker-protocol";
 
 const deferred = () => {
   let resolve!: () => void;
@@ -122,6 +122,19 @@ describe("runtime runner", () => {
 
     expect(events.at(-1)).toEqual({ tag: "paused" });
     expect(events.filter((event) => event.tag === "progress")).toHaveLength(1);
+  });
+
+  it("does not emit paused when no session exists", async () => {
+    const events: WorkerEvent[] = [];
+    const runner = createRunner({
+      emit(event) {
+        events.push(event);
+      }
+    });
+
+    await runner.handleRequest({ tag: "pause" });
+
+    expect(events).toEqual([]);
   });
 
   it("steps through a session without restarting it", async () => {

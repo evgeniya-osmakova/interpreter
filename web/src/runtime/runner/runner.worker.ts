@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { createRunner } from "./runner";
-import { decodeWorkerRequest, type WorkerEvent } from "./worker-protocol";
+import { decodeWorkerRequest, type WorkerEvent } from "../protocol/worker-protocol";
 
 const runner = createRunner({
   emit(event: WorkerEvent): void {
