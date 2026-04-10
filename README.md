@@ -10,7 +10,7 @@ The phases are mirrored intentionally rather than implemented as unrelated proje
 - `core` defines domain types and explicit `Result/Error` modeling.
 - `program` separates raw parsing from validated program construction.
 - `semantics` defines `step`, bounded evaluation, and execution contracts.
-- `runtime` and `ui` exist only in `web/`, keeping the browser layer thin over the pure engine.
+- `runtime`, `helpers`, and `ui` exist only in `web/`, keeping the browser layer thin over the pure engine.
 
 ## Quick Start
 
@@ -46,20 +46,21 @@ npm run dev
 - the Lean model includes an end-to-end `Hello World` proof artifact
 - the TS engine correctly runs the canonical Brainfuck `Hello World`
 - browser execution is non-blocking via `Web Worker` plus chunked `runSlice`
+- runtime logic and client orchestration are deeply encapsulated away from the UI components
 
 ## Cross-Phase Mapping
 
 | Concept | Lean | TypeScript |
 | --- | --- | --- |
 | Result | `Brainfuck.Core.Result` | `brainfuck/core/result.ts` |
-| Tape and core machine domain | `Cell`, `Tape`, `Pointer` | `cell.ts`, `tape.ts`, `pointer.ts` |
-| Raw program | `RawProgram` | `raw-program.ts` |
-| Validated program | `ValidatedProgram`, `ProgramCounter` | `validated-program.ts` |
-| Validation | `Program.Validate` | `program/validate.ts` |
-| Single-step semantics | `Semantics.step` | `semantics/step.ts` |
-| Bounded evaluation | `Semantics.runFuel`, `Semantics.runSlice` | `semantics/eval.ts` |
-| Browser protocol boundary | n/a | `runtime/worker-protocol.ts`, `runtime/client.ts`, `runtime/runner.worker.ts` |
-| Async browser driver | n/a | `runtime/runner.ts`, `runner.worker.ts` |
+| Tape and core machine domain | `Cell`, `Tape`, `Pointer` | `brainfuck/core/cell.ts`, `tape.ts`, `pointer.ts` |
+| Raw program | `RawProgram` | `brainfuck/program/raw-program.ts` |
+| Validated program | `ValidatedProgram`, `ProgramCounter` | `brainfuck/program/validated-program.ts` |
+| Validation | `Program.Validate` | `brainfuck/program/validate.ts` |
+| Single-step semantics | `Semantics.step` | `brainfuck/semantics/step.ts` |
+| Bounded evaluation | `Semantics.runFuel`, `Semantics.runSlice` | `brainfuck/semantics/eval.ts` |
+| Browser protocol boundary | n/a | `runtime/protocol/worker-protocol.ts`, `runtime/client/runtime-client.ts` |
+| Async browser driver | n/a | `runtime/runner/runner.ts`, `runtime/runner/runner.worker.ts`, `runtime/appRunTime/app-run-time.ts` |
 
 ## Browser Execution Model
 
@@ -75,9 +76,7 @@ The browser shell never executes the interpreter on the main thread.
 
 This is better than timers on the main thread because non-terminating or long-running programs cannot freeze the UI thread.
 
-## PDF Requirements vs Candidate Design Decisions
-
-The following items are direct PDF requirements:
+## Requirements
 
 - fixed tape size of `30000`
 - cell range `0..255` with modulo `256` arithmetic
@@ -87,13 +86,12 @@ The following items are direct PDF requirements:
 - pure TypeScript engine with no in-place mutation of existing interpreter state
 - non-blocking browser execution
 
-The following items are explicit candidate design decisions and are not prescribed by the PDF:
+## Was added additionally
 
-- Candidate design decision: Phase II lives in `web/` rather than `ts/` because the deliverable includes both engine and browser UI.
-- Candidate design decision: `,` on empty input returns `RuntimeError.inputExhausted` instead of silently writing `0` or leaving the cell unchanged. This fits the repository-wide preference for explicit error modeling.
-- Candidate design decision: non-Brainfuck characters are ignored during parsing and never reach validation. This keeps the parser permissive while preserving the required separation `source -> parse -> validate -> evaluate`.
-- Candidate design decision: UI output is rendered as text, but the engine itself models input and output as byte sequences.
-- Candidate design decision: browser execution uses a `Web Worker` plus chunked `runSlice` evaluation, rather than timers on the main thread.
+- `,` on empty input returns `RuntimeError.inputExhausted` instead of silently writing `0` or leaving the cell unchanged. This fits the repository-wide preference for explicit error modeling.
+- non-Brainfuck characters are ignored during parsing and never reach validation. This keeps the parser permissive while preserving the required separation `source -> parse -> validate -> evaluate`.
+- UI output is rendered as text, but the engine itself models input and output as byte sequences.
+- browser execution uses a `Web Worker` plus chunked `runSlice` evaluation, rather than timers on the main thread.
 
 ## Chosen Validated Program Design
 
@@ -183,6 +181,7 @@ This is a better starting tradeoff than exposing raw `number[]`:
     ├── vite.config.ts
     ├── src/
     │   ├── main.ts
+    │   ├── app.ts
     │   ├── brainfuck/
     │   │   ├── core/
     │   │   │   ├── cell.ts
@@ -200,32 +199,41 @@ This is a better starting tradeoff than exposing raw `number[]`:
     │   │   └── semantics/
     │   │       ├── eval.ts
     │   │       └── step.ts
+    │   ├── helpers/
+    │   │   ├── examples.ts
+    │   │   ├── input-mode.ts
+    │   │   ├── runtime-messages.ts
+    │   │   └── text-codec.ts
     │   ├── runtime/
-    │   │   ├── budget.ts
-    │   │   ├── client.ts
-    │   │   ├── runner.ts
-    │   │   ├── runner.worker.ts
-    │   │   ├── snapshot.ts
-    │   │   └── worker-protocol.ts
-    │   ├── styles/
-    │   │   └── app.css
+    │   │   ├── appRunTime/
+    │   │   │   └── app-run-time.ts
+    │   │   ├── client/
+    │   │   │   └── runtime-client.ts
+    │   │   ├── protocol/
+    │   │   │   └── worker-protocol.ts
+    │   │   ├── runner/
+    │   │   │   ├── runner.ts
+    │   │   │   ├── runner.worker.ts
+    │   │   │   └── snapshot.ts
+    │   │   └── index.ts
     │   └── ui/
-    │       ├── app.ts
-    │       ├── app-runtime.ts
-    │       ├── app-text.ts
-    │       ├── controls.ts
-    │       ├── examples.ts
-    │       ├── output-view.ts
-    │       ├── program-view.ts
-    │       ├── status-view.ts
-    │       └── text-codec.ts
+    │       ├── components/
+    │       │   ├── controls.ts
+    │       │   ├── intro.ts
+    │       │   ├── output-view.ts
+    │       │   ├── program-view.ts
+    │       │   └── status.ts
+    │       ├── styles/
+    │       │   └── app.css
+    │       └── index.ts
     └── tests/
-        ├── budget.test.ts
         ├── client.test.ts
         ├── eval.test.ts
+        ├── examples.test.ts
         ├── hello-world.test.ts
         ├── runtime.test.ts
         ├── step.test.ts
+        ├── text-codec.test.ts
         ├── ui.test.ts
         ├── validation.test.ts
         └── worker-protocol.test.ts
