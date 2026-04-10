@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeCell } from "../src/brainfuck/core/cell";
 import { initialExecState, type ExecState } from "../src/brainfuck/core/state";
 import { writeTape } from "../src/brainfuck/core/tape";
@@ -10,6 +10,20 @@ import { createMachineSnapshot } from "../src/runtime/runner/snapshot";
 import type { RuntimeClient, RuntimeEventHandler } from "../src/runtime/client/runtime-client";
 import type { WorkerEvent, WorkerRequest } from "../src/runtime/protocol/worker-protocol";
 import { mountApp, type AppHandle } from "../src/app";
+
+const shared = vi.hoisted(() => ({
+  currentClient: null as RuntimeClient | null
+}));
+
+vi.mock("../src/runtime/index", async () => {
+  const { bindAppRuntime } = await import("../src/runtime/appRunTime/app-run-time");
+  return {
+    createAppRuntime: (views: any) => {
+      if (!shared.currentClient) throw new Error("Test client not configured");
+      return bindAppRuntime(shared.currentClient, views);
+    }
+  };
+});
 
 class FakeRuntimeClient implements RuntimeClient {
   readonly requests: WorkerRequest[] = [];
@@ -87,6 +101,7 @@ let appHandle: AppHandle | null = null;
 afterEach(() => {
   appHandle?.dispose();
   appHandle = null;
+  shared.currentClient = null;
   document.body.innerHTML = "";
 });
 
@@ -96,7 +111,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const wikiLink = root.querySelector<HTMLAnchorElement>('a[href="https://en.wikipedia.org/wiki/Brainfuck"]');
 
@@ -116,7 +132,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const exampleButton = root.querySelector<HTMLButtonElement>(
       'button[data-example-id="hello-world"]'
@@ -141,7 +158,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const exampleButton = root.querySelector<HTMLButtonElement>(
       'button[data-example-id="echo-two"]'
@@ -166,7 +184,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const input = root.querySelector<HTMLInputElement>('input[name="input"]');
@@ -189,7 +208,7 @@ describe("browser UI shell", () => {
     expect(inputDescription()).toContain("Each executed , command consumes 1 byte");
     expect(inputDescription()).toContain("The browser turns text into UTF-8 bytes before execution");
 
-    input.value = "🙂";
+    input.value = "😀";
     input.dispatchEvent(new Event("input"));
 
     expect(inputDescription()).toContain("Current input: 1 character and 4 bytes.");
@@ -200,7 +219,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const input = root.querySelector<HTMLInputElement>('input[name="input"]');
@@ -235,7 +255,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const stepButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
@@ -264,7 +285,8 @@ describe("browser UI shell", () => {
     const client = new FakeRuntimeClient();
     const state = createProgressState();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     expect(source).not.toBeNull();
     if (source === null) {
@@ -299,7 +321,8 @@ describe("browser UI shell", () => {
     const client = new FakeRuntimeClient();
     const state = createProgressState();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
     client.emit({
       tag: "progress",
       snapshot: createMachineSnapshot(state),
@@ -327,7 +350,8 @@ describe("browser UI shell", () => {
     const client = new FakeRuntimeClient();
     const state = createProgressState();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const playButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
@@ -369,7 +393,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const pauseButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
       (button) => button.textContent === "Pause"
@@ -387,7 +412,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe("No executable instructions yet.");
     expect(root.querySelectorAll(".tape-cell")).toHaveLength(21);
@@ -414,7 +440,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     expect(source).not.toBeNull();
@@ -436,7 +463,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     client.emit({
       tag: "validationError",
@@ -472,7 +500,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new FakeRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const resetButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find(
       (button) => button.textContent === "Reset"
@@ -496,7 +525,8 @@ describe("browser UI shell", () => {
     document.body.append(root);
     const client = new RunnerBackedRuntimeClient();
 
-    appHandle = mountApp(root, client);
+    shared.currentClient = client;
+    appHandle = mountApp(root);
 
     const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
     const input = root.querySelector<HTMLInputElement>('input[name="input"]');
