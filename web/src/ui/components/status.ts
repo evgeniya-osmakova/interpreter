@@ -4,7 +4,7 @@ export interface Status {
   setProgressStatus: (label: string, progress: { pc: number; pointer: number; steps: number }) => void;
 }
 
-export const renderStatusView = (): StatusView => {
+export const renderStatusView = (): Status => {
   const element = document.createElement("div");
   element.className = "status-note";
 

@@ -5,7 +5,7 @@ import type { OutputView } from "./components/output-view";
 import { renderOutputView } from "./components/output-view";
 import type { ProgramView } from "./components/program-view";
 import { renderProgramView } from "./components/program-view";
-import type { StatusView } from "./components/status";
+import type { Status } from "./components/status";
 import { renderStatusView } from "./components/status";
 
 export interface AppUi {
@@ -14,7 +14,7 @@ export interface AppUi {
   readonly controls: Controls;
   readonly output: OutputView;
   readonly programView: ProgramView;
-  readonly status: StatusView;
+  readonly status: Status;
 }
 
 export const renderAppUi = (): AppUi => {
