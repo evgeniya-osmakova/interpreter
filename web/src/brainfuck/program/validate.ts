@@ -10,6 +10,10 @@ import {
   type ValidatedProgram
 } from "./validated-program";
 
+const DEFAULT_JUMP_TARGET_OFFSET = 0;
+const LOOP_START_NEXT_INSTRUCTION_OFFSET = 1;
+const MISSING_JUMP_TARGET_SENTINEL = -1;
+
 const buildJumpMap = (
   instructions: readonly InstructionToken[]
 ): Result<Map<number, number>, ValidationError> => {
@@ -47,14 +51,14 @@ const resolveTarget = (
   jumps: Map<number, number>,
   sourceIndex: number,
   length: number,
-  offset = 0
+  offset = DEFAULT_JUMP_TARGET_OFFSET
 ): Result<ProgramCounter, ValidationError> => {
   const target = jumps.get(sourceIndex);
   if (target === undefined) {
     return err<ProgramCounter, ValidationError>({
       tag: "invalidJumpTarget",
       index: sourceIndex,
-      target: -1
+      target: MISSING_JUMP_TARGET_SENTINEL
     });
   }
 
@@ -81,7 +85,7 @@ const tokenToValidatedInstruction = (
     case "input":
       return ok({ tag: "input" });
     case "loopStart": {
-      const target = resolveTarget(jumps, index, length, 1);
+      const target = resolveTarget(jumps, index, length, LOOP_START_NEXT_INSTRUCTION_OFFSET);
       return target.tag === "ok"
         ? ok({ tag: "jumpIfZero", target: target.value })
         : err(target.error);

@@ -3,11 +3,11 @@ import Brainfuck.Core.Pointer
 
 namespace Brainfuck.Core
 
-abbrev Tape := Vector Cell 30000
+abbrev Tape := Vector Cell Pointer.length
 
 namespace Tape
 
-def blank : Tape := Vector.replicate 30000 Cell.zero
+def blank : Tape := Vector.replicate Pointer.length Cell.zero
 
 def read (tape : Tape) (pointer : Pointer) : Cell :=
   tape.get pointer

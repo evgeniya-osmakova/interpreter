@@ -3,24 +3,33 @@ import Brainfuck.Core.Result
 
 namespace Brainfuck.Core
 
-abbrev Pointer := Fin 30000
+namespace Pointer
+
+def length : Nat := 30000
+def zeroIndex : Nat := 0
+def step : Nat := 1
+def lastIndex : Nat := length - step
+
+end Pointer
+
+abbrev Pointer := Fin Pointer.length
 
 namespace Pointer
 
-def zero : Pointer := ⟨0, by decide⟩
+def zero : Pointer := ⟨zeroIndex, by decide⟩
 
 def moveRight (pointer : Pointer) : Result Pointer RuntimeError :=
-  if h : pointer.val + 1 < 30000 then
-    .ok ⟨pointer.val + 1, h⟩
+  if h : pointer.val + step < length then
+    .ok ⟨pointer.val + step, h⟩
   else
     .err .pointerOutOfBounds
 
 def moveLeft (pointer : Pointer) : Result Pointer RuntimeError :=
-  if h : 0 < pointer.val then
-    let hne : pointer.val ≠ 0 := Nat.ne_of_gt h
+  if h : zeroIndex < pointer.val then
+    let hne : pointer.val ≠ zeroIndex := Nat.ne_of_gt h
     .ok
       ⟨
-        pointer.val - 1,
+        pointer.val - step,
         Nat.lt_trans (Nat.sub_one_lt hne) pointer.isLt
       ⟩
   else

@@ -1,16 +1,25 @@
 namespace Brainfuck.Core
 
-abbrev Cell := Fin 256
+namespace Cell
+
+def modulus : Nat := 256
+def zeroValue : Nat := 0
+def step : Nat := 1
+def maxValue : Nat := modulus - step
+
+end Cell
+
+abbrev Cell := Fin Cell.modulus
 
 namespace Cell
 
-def zero : Cell := ⟨0, by decide⟩
+def zero : Cell := ⟨zeroValue, by decide⟩
 
 def increment (cell : Cell) : Cell :=
-  ⟨(cell.val + 1) % 256, Nat.mod_lt _ (by decide)⟩
+  ⟨(cell.val + step) % modulus, Nat.mod_lt _ (by decide)⟩
 
 def decrement (cell : Cell) : Cell :=
-  ⟨(cell.val + 255) % 256, Nat.mod_lt _ (by decide)⟩
+  ⟨(cell.val + maxValue) % modulus, Nat.mod_lt _ (by decide)⟩
 
 end Cell
 

@@ -4,7 +4,7 @@ namespace Brainfuck.Proofs
 
 open Brainfuck.Core
 
-def lastPointer : Pointer := ⟨29999, by decide⟩
+def lastPointer : Pointer := ⟨Pointer.lastIndex, by decide⟩
 
 theorem moveLeft_zero_is_error :
     Pointer.moveLeft Pointer.zero = .err .pointerOutOfBounds := by

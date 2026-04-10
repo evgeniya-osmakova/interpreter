@@ -1,4 +1,7 @@
+export const MIN_CELL_VALUE = 0;
 export const CELL_MODULUS = 256;
+export const MAX_CELL_VALUE = CELL_MODULUS - 1;
+export const CELL_STEP = 1;
 
 declare const cellBrand: unique symbol;
 
@@ -11,8 +14,8 @@ const normalizeCell = (value: number): number => {
 
 export const makeCell = (value: number): Cell => normalizeCell(value) as Cell;
 
-export const zeroCell = (): Cell => makeCell(0);
+export const zeroCell = (): Cell => makeCell(MIN_CELL_VALUE);
 
-export const incrementCell = (cell: Cell): Cell => makeCell((cell as number) + 1);
+export const incrementCell = (cell: Cell): Cell => makeCell((cell as number) + CELL_STEP);
 
-export const decrementCell = (cell: Cell): Cell => makeCell((cell as number) - 1);
+export const decrementCell = (cell: Cell): Cell => makeCell((cell as number) - CELL_STEP);

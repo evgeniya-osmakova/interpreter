@@ -8,7 +8,7 @@ open Brainfuck.Core
 open Brainfuck.Program
 open Brainfuck.Semantics
 
-def byte (value : Nat) (h : value < 256 := by decide) : Cell := ⟨value, h⟩
+def byte (value : Nat) (h : value < Cell.modulus := by decide) : Cell := ⟨value, h⟩
 
 def helloWorldSource : String :=
   "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>" ++

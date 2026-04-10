@@ -1,3 +1,4 @@
+import { TAPE_LAST_INDEX, MIN_POINTER_INDEX } from "../brainfuck/core/pointer";
 import type { RuntimeError, ValidationError } from "../brainfuck/core/error";
 import { createWorkerRuntimeClient, type RuntimeClient } from "../runtime/client";
 import { createInitialMachineSnapshot } from "../runtime/snapshot";
@@ -19,6 +20,8 @@ export interface AppHandle {
 }
 
 type PlaybackMode = "idle" | "playing" | "paused" | "stepping";
+const INPUT_BYTES_PER_READ = 1;
+const formatTapeIndex = (value: number): string => new Intl.NumberFormat("en-US").format(value);
 
 const createIntro = (): HTMLElement => {
   const intro = document.createElement("header");
@@ -64,7 +67,7 @@ const describeInputMode = (source: string, input: string): string => {
   const byteCount = countUtf8Bytes(input);
 
   if (input === "") {
-    return "The browser turns text into UTF-8 bytes before execution. Most Latin letters use 1 byte; emoji and many non-Latin characters use several.";
+    return `The browser turns text into UTF-8 bytes before execution. Most Latin letters use ${INPUT_BYTES_PER_READ} byte; emoji and many non-Latin characters use several.`;
   }
 
   return `Current input: ${characterCount} ${pluralize(characterCount, "character", "characters")} and ${byteCount} ${pluralize(byteCount, "byte", "bytes")}.`;
@@ -84,7 +87,7 @@ const formatValidationError = (error: ValidationError): string => {
 const formatRuntimeError = (error: RuntimeError): string => {
   switch (error.tag) {
     case "pointerOutOfBounds":
-      return "The pointer tried to move outside the tape. Valid cells are 0 through 29,999.";
+      return `The pointer tried to move outside the tape. Valid cells are ${MIN_POINTER_INDEX} through ${formatTapeIndex(TAPE_LAST_INDEX)}.`;
     case "inputExhausted":
       return "The program tried to read another byte, but Program input has no bytes left.";
   }

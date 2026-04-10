@@ -1,4 +1,4 @@
-import { makeCell, type Cell } from "../brainfuck/core/cell";
+import { makeCell, MAX_CELL_VALUE, MIN_CELL_VALUE, type Cell } from "../brainfuck/core/cell";
 import { err, ok, type Result } from "../brainfuck/core/result";
 import type { TapeWindowCell } from "../brainfuck/core/tape";
 import type { RuntimeError, ValidationError } from "../brainfuck/core/error";
@@ -55,11 +55,11 @@ const decodeInput = (value: unknown): Result<readonly Cell[], ProtocolError> => 
 
   const cells: Cell[] = [];
   for (const item of value) {
-    if (!Number.isInteger(item) || item < 0 || item > 255) {
+    if (!Number.isInteger(item) || item < MIN_CELL_VALUE || item > MAX_CELL_VALUE) {
       return err({
         tag: "invalidRunField",
         field: "input",
-        detail: "expected each input byte to be an integer in the range 0..255"
+        detail: `expected each input byte to be an integer in the range ${MIN_CELL_VALUE}..${MAX_CELL_VALUE}`
       });
     }
 
@@ -79,10 +79,10 @@ const decodeOutputBytes = (value: unknown): Result<OutputBytes, ProtocolError> =
 
   const bytes: number[] = [];
   for (const item of value) {
-    if (!isFiniteInteger(item) || item < 0 || item > 255) {
+    if (!isFiniteInteger(item) || item < MIN_CELL_VALUE || item > MAX_CELL_VALUE) {
       return err({
         tag: "invalidRequest",
-        detail: "expected each output byte to be an integer in the range 0..255"
+        detail: `expected each output byte to be an integer in the range ${MIN_CELL_VALUE}..${MAX_CELL_VALUE}`
       });
     }
 

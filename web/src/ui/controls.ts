@@ -1,5 +1,8 @@
 import { PROGRAM_EXAMPLES, type ProgramExample } from "./examples";
 
+const PROGRAM_SOURCE_ROWS = 12;
+const PROGRAM_INPUT_BYTES_PER_READ = 1;
+
 export interface Controls {
   readonly examplesSection: HTMLElement;
   readonly runPanel: HTMLElement;
@@ -63,7 +66,7 @@ export const renderControls = (): Controls => {
   const source = document.createElement("textarea");
   source.id = "source-input";
   source.name = "source";
-  source.rows = 12;
+  source.rows = PROGRAM_SOURCE_ROWS;
   source.placeholder = "Enter Brainfuck source";
   source.className = "source-input";
 
@@ -143,7 +146,7 @@ export const renderControls = (): Controls => {
     inputDescription.append(
       "Each executed ",
       renderCommaCommand(),
-      " command consumes 1 byte. ",
+      ` command consumes ${PROGRAM_INPUT_BYTES_PER_READ} byte. `,
       detail
     );
   };

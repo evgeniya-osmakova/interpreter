@@ -1,3 +1,4 @@
+import { MIN_CELL_VALUE } from "../core/cell";
 import {
   isProgramCounterTerminated,
   nextProgramCounter
@@ -87,7 +88,9 @@ export const step = (
       return ok({
         machine: state.machine,
         pc:
-          (cell as number) === 0 ? instruction.target : nextProgramCounter(program, state.pc)
+          (cell as number) === MIN_CELL_VALUE
+            ? instruction.target
+            : nextProgramCounter(program, state.pc)
       });
     }
     case "jumpIfNonZero": {
@@ -95,7 +98,7 @@ export const step = (
       return ok({
         machine: state.machine,
         pc:
-          (cell as number) === 0
+          (cell as number) === MIN_CELL_VALUE
             ? nextProgramCounter(program, state.pc)
             : instruction.target
       });
