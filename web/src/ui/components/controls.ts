@@ -1,5 +1,5 @@
-import type { InputModeState } from "../../application/input-mode";
-import { PROGRAM_EXAMPLES, type ProgramExample } from "../../application/examples";
+import type { InputModeState } from "../../helpers/input-mode";
+import { PROGRAM_EXAMPLES, type ProgramExample } from "../../helpers/examples";
 
 const PROGRAM_SOURCE_ROWS = 12;
 

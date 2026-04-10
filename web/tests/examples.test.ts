@@ -3,7 +3,7 @@ import type { Cell } from "../src/brainfuck/core/cell";
 import { parse } from "../src/brainfuck/program/parse";
 import { validate } from "../src/brainfuck/program/validate";
 import { runWithInput } from "../src/brainfuck/semantics/eval";
-import { PROGRAM_EXAMPLES } from "../src/application/examples";
+import { PROGRAM_EXAMPLES } from "../src/helpers/examples";
 
 const bytesToText = (bytes: readonly Cell[]): string =>
   bytes.map((byte) => String.fromCharCode(byte as number)).join("");

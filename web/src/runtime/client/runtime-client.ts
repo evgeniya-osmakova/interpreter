@@ -45,10 +45,3 @@ export const bindRuntimeClient = (worker: WorkerEndpoint): RuntimeClient => {
     }
   };
 };
-
-export const createWorkerRuntimeClient = (): RuntimeClient =>
-  bindRuntimeClient(
-    new Worker(new URL("../runner/runner.worker.ts", import.meta.url), {
-      type: "module"
-    })
-  );

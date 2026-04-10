@@ -6,7 +6,6 @@ import { isTerminated } from "../../brainfuck/semantics/step";
 import type { ValidatedProgram } from "../../brainfuck/program/validated-program";
 import type { ExecState } from "../../brainfuck/core/state";
 import { createMachineSnapshot } from "./snapshot";
-import { PLAYBACK_STEP_BUDGET, DEFAULT_PLAYBACK_DELAY_MS } from "./budget";
 import type { WorkerEvent, WorkerRequest } from "../protocol/worker-protocol";
 
 export interface RunnerDeps {
@@ -19,6 +18,9 @@ interface LoadedSession {
   readonly program: ValidatedProgram;
   state: ExecState;
 }
+
+export const PLAYBACK_STEP_BUDGET = 1;
+export const DEFAULT_PLAYBACK_DELAY_MS = 80;
 
 const defaultPause = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, DEFAULT_PLAYBACK_DELAY_MS));

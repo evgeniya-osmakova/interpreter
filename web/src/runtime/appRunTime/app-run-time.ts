@@ -1,11 +1,12 @@
-import { createInitialMachineSnapshot } from "../runtime/runner/snapshot";
-import type { RuntimeClient } from "../runtime/client/runtime-client";
-import type { WorkerEvent, WorkerRequest } from "../runtime/protocol/worker-protocol";
-import { PROGRAM_EXAMPLES } from "./examples";
-import { resolveInputMode } from "./input-mode";
-import { formatProtocolError, formatRuntimeError, formatValidationError } from "./runtime-messages";
-import { decodeBytesToText, encodeTextToCells } from "./text-codec";
-import type { AppUi } from "../ui/index";
+import { RuntimeClient } from '../client/runtime-client'
+import type { AppUi } from '../../ui'
+import { resolveInputMode } from '../../helpers/input-mode'
+import { createInitialMachineSnapshot } from '../runner/snapshot'
+import { decodeBytesToText, encodeTextToCells } from '../../helpers/text-codec'
+import type { WorkerEvent, WorkerRequest } from '../protocol/worker-protocol'
+import { formatProtocolError, formatRuntimeError, formatValidationError } from '../../helpers/runtime-messages'
+import { PROGRAM_EXAMPLES } from '../../helpers/examples'
+import { AppRuntimeHandle } from '../index'
 
 type PlaybackState = "inactive" | "playing" | "paused" | "stepping";
 type StopReason = "reset" | "replaceSession" | null;

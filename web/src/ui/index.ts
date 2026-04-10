@@ -5,8 +5,8 @@ import type { OutputView } from "./components/output-view";
 import { renderOutputView } from "./components/output-view";
 import type { ProgramView } from "./components/program-view";
 import { renderProgramView } from "./components/program-view";
-import type { StatusView } from "./components/status-view";
-import { renderStatusView } from "./components/status-view";
+import type { StatusView } from "./components/status";
+import { renderStatusView } from "./components/status";
 
 export interface AppUi {
   readonly intro: HTMLElement;

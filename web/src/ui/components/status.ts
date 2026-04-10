@@ -1,4 +1,4 @@
-export interface StatusView {
+export interface Status {
   readonly element: HTMLElement;
   setStatus: (label: string, detail?: string, tone?: "default" | "error") => void;
   setProgressStatus: (label: string, progress: { pc: number; pointer: number; steps: number }) => void;

@@ -1,2 +1,0 @@
-export const PLAYBACK_STEP_BUDGET = 1;
-export const DEFAULT_PLAYBACK_DELAY_MS = 80;
