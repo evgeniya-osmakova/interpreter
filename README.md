@@ -1,5 +1,8 @@
 # Brainfuck Two-Phase Repository
 
+<img width="746" height="636" alt="Screenshot 2026-04-10 at 17 54 29" src="https://github.com/user-attachments/assets/db4d3124-bde2-4c0b-a27f-efee7e6b4507" />
+
+
 This repository is one Brainfuck system with two tightly related phases:
 
 - `lean/` contains the Phase I Lean 4 formal model.
