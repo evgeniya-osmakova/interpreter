@@ -1,17 +1,25 @@
 :root {
+  --source-panel-height: 18rem;
+}
+
+body {
   color: #102038;
   background:
     radial-gradient(circle at top left, #f4efe6, transparent 35%),
     linear-gradient(180deg, #f7f4ee 0%, #e7eef5 100%);
   font-family: "Iowan Old Style", "Palatino Linotype", serif;
-  --source-panel-height: 18rem;
+  height: 100%;
 }
 
+html,
 body {
   margin: 0;
+  min-height: 100vh;
 }
 
 #app {
+  min-height: 100vh;
+  box-sizing: border-box;
   max-width: 1400px;
   margin: 0 auto;
   padding: 40px 28px 64px;
@@ -30,7 +38,7 @@ code {
 }
 
 h1 {
-  margin: 0 0 24px;
+  margin: 0 0 5px;
   font-size: clamp(2rem, 3vw, 3rem);
   letter-spacing: 0.02em;
 }
@@ -58,9 +66,9 @@ input:disabled {
 
 .hero {
   display: grid;
-  gap: 14px;
-  margin-bottom: 28px;
-  padding: 24px;
+  gap: 5px;
+  margin-bottom: 5px;
+  padding: 15px;
   border: 1px solid #d7e0e8;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 18px 45px rgba(16, 32, 56, 0.08);
@@ -74,13 +82,13 @@ input:disabled {
 
 .workspace {
   display: grid;
-  gap: 20px;
+  gap: 5px;
 }
 
 .workspace__controls,
 .workspace__results {
   display: grid;
-  gap: 20px;
+  gap: 5px;
 }
 
 .control-grid {
@@ -91,8 +99,8 @@ input:disabled {
 .control-panel,
 .control-field {
   display: grid;
-  gap: 12px;
-  padding: 18px;
+  gap: 5px;
+  padding: 15px;
   border: 1px solid #d7e0e8;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 12px 30px rgba(16, 32, 56, 0.05);
@@ -101,6 +109,7 @@ input:disabled {
 .control-field__label {
   font-size: 1rem;
   font-weight: 700;
+  margin: 0;
 }
 
 .control-field__description,
@@ -245,7 +254,7 @@ button:disabled {
 }
 
 .panel-title {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 1rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
