@@ -287,7 +287,7 @@ describe("browser UI shell", () => {
     expect(root.querySelector(".status__label")?.textContent).toBe("Finished");
     expect(root.querySelector(".status__detail")?.textContent).toBe("PC 2 · Pointer 0 · Steps 2");
     expect(root.querySelector(".output__text")?.textContent).toBe("A");
-    expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe("PC 2 / 3");
+    expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe("PC 2 / 3 · showing 1-3");
     expect(root.querySelector(".program-visualizer__char--current")?.textContent).toBe("+");
     expect(root.querySelector(".tape-window")?.textContent).toContain("65");
     expect(root.querySelectorAll(".tape-cell")).toHaveLength(21);
@@ -364,6 +364,28 @@ describe("browser UI shell", () => {
 
     expect(root.querySelector(".tape-cell--pointer .tape-cell__value")?.textContent).toBe("0");
     expect(root.querySelectorAll(".tape-cell")).toHaveLength(21);
+  });
+
+  it("renders only a fixed instruction window for long programs", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const client = new FakeRuntimeClient();
+
+    appHandle = mountApp(root, client);
+
+    const source = root.querySelector<HTMLTextAreaElement>('textarea[name="source"]');
+    expect(source).not.toBeNull();
+    if (source === null) {
+      return;
+    }
+
+    source.value = ">".repeat(30000);
+    source.dispatchEvent(new Event("input"));
+
+    expect(root.querySelectorAll(".program-visualizer__char")).toHaveLength(961);
+    expect(root.querySelector(".program-visualizer__meta")?.textContent).toBe(
+      "30000 executable instructions · showing 1-961"
+    );
   });
 
   it("renders validation and runtime errors in the status view", () => {
